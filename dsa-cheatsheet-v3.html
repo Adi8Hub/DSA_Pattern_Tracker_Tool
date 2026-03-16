@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DSA Patterns - C#</title>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0D1117;color:#E6EDF3;font-family:'JetBrains Mono','Fira Code',monospace}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:#0D1117}
+::-webkit-scrollbar-thumb{background:#30363D;border-radius:3px}
+button:focus{outline:none}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState}=React;
+
+const P=[
+{id:1,name:"Sliding Window",emoji:"🪟",rank:"⭐ Most Common",color:"#00D4FF",bg:"#00D4FF15",border:"#00D4FF40",tc:"O(n)",sc:"O(1) or O(k)",
+identify:["Contiguous subarray/substring","Max/min/avg of subarray of size k","Longest/shortest subarray satisfying condition","Keywords: 'window', 'contiguous', 'substring', 'subarray'"],
+whenToUse:"Use when the problem involves a linear data structure and you need to find a contiguous range satisfying some condition. Works when brute force is O(n²) or O(n³).",
+types:["Fixed Size Window","Variable Size Window (Expand/Shrink)"],
+template:`// Fixed window of size k
+int FixedWindow(int[] arr, int k) {
+    int windowSum = 0, maxSum = 0;
+    for (int i = 0; i < k; i++) windowSum += arr[i];
+    maxSum = windowSum;
+    for (int i = k; i < arr.Length; i++) {
+        windowSum += arr[i] - arr[i - k]; // slide
+        maxSum = Math.Max(maxSum, windowSum);
+    }
+    return maxSum;
+}
+
+// Variable window (longest substring with k distinct)
+int VariableWindow(string s, int k) {
+    int left = 0, maxLen = 0;
+    var freq = new Dictionary<char, int>();
+    for (int right = 0; right < s.Length; right++) {
+        freq[s[right]] = freq.GetValueOrDefault(s[right]) + 1;
+        while (freq.Count > k) { // shrink
+            freq[s[left]]--;
+            if (freq[s[left]] == 0) freq.Remove(s[left]);
+            left++;
+        }
+        maxLen = Math.Max(maxLen, right - left + 1);
+    }
+    return maxLen;
+}`,
+pairs:["HashMap (for freq counts)","Two Pointers","Prefix Sum"],
+problems:["Longest Substring Without Repeating","Min Window Substring","Max Sum Subarray of Size K","Permutation in String"],
+trick:"When window becomes invalid → shrink from left. When valid → expand from right."},
+
+{id:2,name:"Two Pointers",emoji:"👆",rank:"⭐ Most Common",color:"#FF6B6B",bg:"#FF6B6B15",border:"#FF6B6B40",tc:"O(n)",sc:"O(1)",
+identify:["Sorted array or can be sorted","Finding pairs/triplets with target sum","Palindrome checks","Keywords: 'pair', 'sorted', 'in-place', 'reverse'"],
+whenToUse:"Use when dealing with sorted arrays/strings to find a pair, or when iterating from both ends reduces O(n²) to O(n). Also great for partitioning.",
+types:["Opposite Direction (left & right)","Same Direction (fast & slow)","Multiple Arrays"],
+template:`// Two Sum in sorted array
+int[] TwoSum(int[] arr, int target) {
+    int left = 0, right = arr.Length - 1;
+    while (left < right) {
+        int sum = arr[left] + arr[right];
+        if (sum == target) return new[] { left, right };
+        else if (sum < target) left++;
+        else right--;
+    }
+    return new[] { -1, -1 };
+}
+
+// Remove duplicates (same direction)
+int RemoveDups(int[] arr) {
+    int slow = 0;
+    for (int fast = 1; fast < arr.Length; fast++)
+        if (arr[fast] != arr[slow]) arr[++slow] = arr[fast];
+    return slow + 1;
+}
+
+// Three Sum
+IList<IList<int>> ThreeSum(int[] nums) {
+    Array.Sort(nums);
+    var result = new List<IList<int>>();
+    for (int i = 0; i < nums.Length - 2; i++) {
+        if (i > 0 && nums[i] == nums[i - 1]) continue;
+        int l = i + 1, r = nums.Length - 1;
+        while (l < r) {
+            int sum = nums[i] + nums[l] + nums[r];
+            if (sum == 0) { result.Add(new[]{nums[i],nums[l],nums[r]}); l++; r--; }
+            else if (sum < 0) l++; else r--;
+        }
+    }
+    return result;
+}`,
+pairs:["Sorting","Sliding Window","Binary Search"],
+problems:["Two Sum II","3Sum","Container With Most Water","Trapping Rain Water","Valid Palindrome"],
+trick:"Always sort first if order doesn't matter. Skip duplicates after finding a match."},
+
+{id:3,name:"Fast & Slow Pointers",emoji:"🐢🐇",rank:"⭐ Common",color:"#A8FF78",bg:"#A8FF7815",border:"#A8FF7840",tc:"O(n)",sc:"O(1)",
+identify:["Cycle detection in linked list/array","Finding middle of linked list","Keywords: 'cycle', 'loop', 'circular', 'middle'","Happy number / repeated sequence detection"],
+whenToUse:"Use with linked lists to detect cycles, find middle nodes, or detect where a cycle starts. Floyd's algorithm is the classic implementation.",
+types:["Cycle Detection","Find Middle","Find Cycle Start"],
+template:`// Detect cycle (Floyd's)
+bool HasCycle(ListNode head) {
+    var slow = head; var fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next; fast = fast.next.next;
+        if (slow == fast) return true;
+    }
+    return false;
+}
+
+// Find cycle start
+ListNode DetectCycle(ListNode head) {
+    var slow = head; var fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next; fast = fast.next.next;
+        if (slow == fast) {
+            slow = head; // reset
+            while (slow != fast) { slow = slow.next; fast = fast.next; }
+            return slow; // cycle start
+        }
+    }
+    return null;
+}
+
+// Find middle
+ListNode FindMiddle(ListNode head) {
+    var slow = head; var fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next; fast = fast.next.next;
+    }
+    return slow;
+}`,
+pairs:["Linked List reversal","Two Pointers"],
+problems:["Linked List Cycle","Find Duplicate Number","Happy Number","Middle of Linked List","Palindrome Linked List"],
+trick:"When fast meets slow → cycle exists. Reset one to head → they meet at cycle start."},
+
+{id:4,name:"Binary Search",emoji:"🔍",rank:"⭐ Most Common",color:"#FFD700",bg:"#FFD70015",border:"#FFD70040",tc:"O(log n)",sc:"O(1)",
+identify:["Sorted array or monotonic function","'Find target / minimum / maximum' in sorted space","Keywords: 'sorted', 'rotated', 'log n', 'search'","Answer lies in a range you can binary search on"],
+whenToUse:"Use whenever the search space is sorted OR when you can define a monotonically true/false condition. Rotated sorted arrays are a classic variant.",
+types:["Classic Binary Search","Find First/Last Position","Search on Answer","Rotated Array"],
+template:`// Classic binary search
+int BinarySearch(int[] arr, int target) {
+    int lo = 0, hi = arr.Length - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2; // avoid overflow
+        if (arr[mid] == target) return mid;
+        else if (arr[mid] < target) lo = mid + 1;
+        else hi = mid - 1;
+    }
+    return -1;
+}
+
+// Search on Answer (minimize max / maximize min)
+int SearchOnAnswer(int[] arr, int m) {
+    int lo = 1, hi = arr.Max(), ans = -1;
+    bool Feasible(int mid) { return true; /* define condition */ }
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (Feasible(mid)) { ans = mid; hi = mid - 1; }
+        else lo = mid + 1;
+    }
+    return ans;
+}
+
+// Rotated sorted array
+int SearchRotated(int[] nums, int target) {
+    int lo = 0, hi = nums.Length - 1;
+    while (lo <= hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (nums[mid] == target) return mid;
+        if (nums[lo] <= nums[mid]) {
+            if (nums[lo] <= target && target < nums[mid]) hi = mid - 1;
+            else lo = mid + 1;
+        } else {
+            if (nums[mid] < target && target <= nums[hi]) lo = mid + 1;
+            else hi = mid - 1;
+        }
+    }
+    return -1;
+}`,
+pairs:["Two Pointers","Greedy (search on answer)","Divide & Conquer"],
+problems:["Binary Search","Search in Rotated Array","Find Minimum in Rotated Array","Koko Eating Bananas","Median of Two Sorted Arrays"],
+trick:"lo + (hi - lo) / 2 prevents overflow. For 'first true', shrink right. For 'last true', shrink left."},
+
+{id:5,name:"BFS",emoji:"🌊",rank:"⭐ Most Common",color:"#FF9F43",bg:"#FF9F4315",border:"#FF9F4340",tc:"O(V + E)",sc:"O(V)",
+identify:["Shortest path in unweighted graph","Level-order traversal","Keywords: 'shortest', 'minimum steps', 'level', 'nearest'","State-space search (word ladder, sliding puzzle)"],
+whenToUse:"Use BFS when you need shortest path in an unweighted graph, level-by-level processing, or 'how many steps to reach'. BFS guarantees shortest path.",
+types:["Graph BFS","Tree Level Order","Multi-source BFS","0-1 BFS"],
+template:`// Standard BFS (shortest path)
+int Bfs(List<List<int>> graph, int start, int end) {
+    var queue = new Queue<(int node, int dist)>();
+    var visited = new HashSet<int> { start };
+    queue.Enqueue((start, 0));
+    while (queue.Count > 0) {
+        var (node, dist) = queue.Dequeue();
+        if (node == end) return dist;
+        foreach (int nb in graph[node])
+            if (visited.Add(nb)) queue.Enqueue((nb, dist + 1));
+    }
+    return -1;
+}
+
+// Multi-source BFS
+int[][] MultiSourceBFS(int[][] grid) {
+    int R = grid.Length, C = grid[0].Length;
+    var dist = new int[R][];
+    for (int i = 0; i < R; i++) { dist[i] = new int[C]; Array.Fill(dist[i], int.MaxValue); }
+    var q = new Queue<(int r, int c)>();
+    for (int i=0;i<R;i++) for(int j=0;j<C;j++)
+        if (grid[i][j]==0) { dist[i][j]=0; q.Enqueue((i,j)); }
+    int[][] dirs={{0,1},{0,-1},{1,0},{-1,0}};
+    while (q.Count>0) {
+        var (r,c)=q.Dequeue();
+        foreach(var d in dirs) {
+            int nr=r+d[0], nc=c+d[1];
+            if(nr>=0&&nr<R&&nc>=0&&nc<C&&dist[nr][nc]>dist[r][c]+1) {
+                dist[nr][nc]=dist[r][c]+1; q.Enqueue((nr,nc));
+            }
+        }
+    }
+    return dist;
+}`,
+pairs:["HashSet (visited)","DFS (when path doesn't matter)","Dijkstra (weighted graphs)"],
+problems:["Binary Tree Level Order","Word Ladder","Rotting Oranges","Shortest Path in Binary Matrix","Number of Islands"],
+trick:"Always mark visited BEFORE adding to queue (not after dequeue) to avoid duplicates."},
+
+{id:6,name:"DFS",emoji:"🌲",rank:"⭐ Most Common",color:"#6C5CE7",bg:"#6C5CE715",border:"#6C5CE740",tc:"O(V + E)",sc:"O(H) — height",
+identify:["All paths / combinations / permutations","Connected components","Cycle detection in directed graphs","Keywords: 'all possible', 'paths', 'combinations', 'islands'"],
+whenToUse:"Use DFS for exploring all paths, backtracking, topological sort, and detecting cycles. Better than BFS for problems requiring full exploration.",
+types:["Tree DFS","Graph DFS","Backtracking DFS","Topological Sort"],
+template:`// Graph DFS (iterative)
+void Dfs(List<List<int>> graph, int start) {
+    var stack = new Stack<int>();
+    var visited = new HashSet<int> { start };
+    stack.Push(start);
+    while (stack.Count > 0) {
+        int node = stack.Pop();
+        foreach (int nb in graph[node])
+            if (visited.Add(nb)) stack.Push(nb);
+    }
+}
+
+// Backtracking DFS (all subsets)
+IList<IList<int>> Subsets(int[] nums) {
+    var result = new List<IList<int>>();
+    void Bt(int start, List<int> curr) {
+        result.Add(new List<int>(curr));
+        for (int i = start; i < nums.Length; i++) {
+            curr.Add(nums[i]);
+            Bt(i + 1, curr);
+            curr.RemoveAt(curr.Count - 1); // undo
+        }
+    }
+    Bt(0, new List<int>());
+    return result;
+}
+
+// DFS on grid (number of islands)
+int NumIslands(char[][] grid) {
+    int count = 0;
+    void Dfs(int r, int c) {
+        if (r<0||r>=grid.Length||c<0||c>=grid[0].Length||grid[r][c]!='1') return;
+        grid[r][c]='0';
+        Dfs(r+1,c); Dfs(r-1,c); Dfs(r,c+1); Dfs(r,c-1);
+    }
+    for(int r=0;r<grid.Length;r++) for(int c=0;c<grid[0].Length;c++)
+        if(grid[r][c]=='1') { Dfs(r,c); count++; }
+    return count;
+}`,
+pairs:["Backtracking","Memoization (→ DP)","Union-Find (alternative for components)"],
+problems:["Number of Islands","Pacific Atlantic Water Flow","Word Search","Course Schedule","All Paths from Source to Target"],
+trick:"DFS = recursive call + base case + undo for backtracking. Mark visited before recursing, unmark after."},
+
+{id:7,name:"Dynamic Programming",emoji:"🧮",rank:"⭐ Most Common",color:"#FD79A8",bg:"#FD79A815",border:"#FD79A840",tc:"O(n²) or O(n·m)",sc:"O(n) optimized",
+identify:["Optimal substructure + overlapping subproblems","Keywords: 'maximum', 'minimum', 'count ways', 'longest', 'can reach'","Decision at each step affects future","Recursion with repeated subproblems"],
+whenToUse:"Use when a recursive solution has overlapping subproblems. DP = memoization (top-down) or tabulation (bottom-up). Start with recursion, add memo, then convert to tabulation.",
+types:["1D DP (linear)","2D DP (grid/string)","Interval DP","Knapsack","State Machine DP"],
+template:`// 1D DP: Coin Change
+int CoinChange(int[] coins, int amount) {
+    var dp = new int[amount + 1];
+    Array.Fill(dp, int.MaxValue);
+    dp[0] = 0;
+    for (int i = 1; i <= amount; i++)
+        foreach (int coin in coins)
+            if (coin <= i && dp[i-coin] != int.MaxValue)
+                dp[i] = Math.Min(dp[i], dp[i-coin] + 1);
+    return dp[amount] == int.MaxValue ? -1 : dp[amount];
+}
+
+// 2D DP: Longest Common Subsequence
+int LCS(string s1, string s2) {
+    int m = s1.Length, n = s2.Length;
+    var dp = new int[m+1, n+1];
+    for (int i = 1; i <= m; i++)
+        for (int j = 1; j <= n; j++)
+            dp[i,j] = s1[i-1]==s2[j-1] ? dp[i-1,j-1]+1 : Math.Max(dp[i-1,j],dp[i,j-1]);
+    return dp[m, n];
+}
+
+// Knapsack (0/1)
+int Knapsack(int[] w, int[] v, int W) {
+    int n = w.Length;
+    var dp = new int[n+1, W+1];
+    for (int i=1;i<=n;i++) for (int j=0;j<=W;j++) {
+        dp[i,j] = dp[i-1,j];
+        if (w[i-1]<=j) dp[i,j] = Math.Max(dp[i,j], dp[i-1,j-w[i-1]]+v[i-1]);
+    }
+    return dp[n, W];
+}`,
+pairs:["Memoization (top-down DFS)","Binary Search (LIS optimization)","Greedy (when DP not needed)"],
+problems:["Climbing Stairs","Coin Change","Longest Increasing Subsequence","Edit Distance","House Robber","Word Break","Unique Paths"],
+trick:"Define dp[i] clearly. Find recurrence relation. Initialize base cases. Build bottom-up. Optimize space by rolling array."},
+
+{id:8,name:"Backtracking",emoji:"↩️",rank:"⭐ Common",color:"#FDCB6E",bg:"#FDCB6E15",border:"#FDCB6E40",tc:"O(n! or 2ⁿ)",sc:"O(n) — recursion stack",
+identify:["Generate all combinations/permutations/subsets","Constraint satisfaction (N-Queens, Sudoku)","Keywords: 'all possible', 'generate', 'find all'","Need to try all options and undo if invalid"],
+whenToUse:"Use when you need to explore all possibilities with constraints. The key: make a choice → explore → undo. Add pruning to avoid invalid branches early.",
+types:["Subsets","Permutations","Combinations","Constraint Satisfaction"],
+template:`// Template: Choose → Explore → Unchoose
+void Backtrack(List<List<int>> result, List<int> curr, int[] opts, int start) {
+    if (/* base case */) { result.Add(new List<int>(curr)); return; }
+    for (int i = start; i < opts.Length; i++) {
+        if (/* pruning */) continue;
+        curr.Add(opts[i]);
+        Backtrack(result, curr, opts, i+1);
+        curr.RemoveAt(curr.Count - 1);
+    }
+}
+
+// Permutations
+IList<IList<int>> Permutations(int[] nums) {
+    var result = new List<IList<int>>();
+    var used = new bool[nums.Length];
+    void Bt(List<int> curr) {
+        if (curr.Count == nums.Length) { result.Add(new List<int>(curr)); return; }
+        for (int i=0;i<nums.Length;i++) {
+            if (used[i]) continue;
+            used[i]=true; curr.Add(nums[i]);
+            Bt(curr);
+            used[i]=false; curr.RemoveAt(curr.Count-1);
+        }
+    }
+    Bt(new List<int>());
+    return result;
+}
+
+// Combination Sum (reuse allowed)
+IList<IList<int>> CombinationSum(int[] candidates, int target) {
+    Array.Sort(candidates);
+    var result = new List<IList<int>>();
+    void Bt(int start, List<int> curr, int rem) {
+        if (rem==0) { result.Add(new List<int>(curr)); return; }
+        for (int i=start;i<candidates.Length;i++) {
+            if (candidates[i]>rem) break; // pruning
+            curr.Add(candidates[i]);
+            Bt(i, curr, rem-candidates[i]);
+            curr.RemoveAt(curr.Count-1);
+        }
+    }
+    Bt(0, new List<int>(), target);
+    return result;
+}`,
+pairs:["DFS","DP (memoize repeated states)","Pruning"],
+problems:["Subsets","Permutations","Combination Sum","N-Queens","Sudoku Solver","Word Search"],
+trick:"Sort first to enable early pruning. Skip duplicates: if(i > start && nums[i] == nums[i-1]) continue."},
+
+{id:9,name:"Heap / Priority Queue",emoji:"🏔️",rank:"⭐ Common",color:"#00CEC9",bg:"#00CEC915",border:"#00CEC940",tc:"O(n log k)",sc:"O(k)",
+identify:["Top K elements (largest/smallest/frequent)","Merge K sorted lists","Streaming median","Keywords: 'k largest', 'k smallest', 'top k', 'median'"],
+whenToUse:"Use when you need repeated access to max/min elements, especially with K. Min-heap for K largest (size=k), Max-heap for K smallest.",
+types:["Min-Heap (K largest)","Max-Heap (K smallest)","Two Heaps (median)","Merge K Sorted"],
+template:`// C# PriorityQueue<TElement, TPriority> (.NET 6+)
+// Lower priority value = dequeued first (min-heap by default)
+
+// K largest elements (min-heap of size k)
+int[] KLargest(int[] nums, int k) {
+    var heap = new PriorityQueue<int, int>();
+    foreach (int n in nums) {
+        heap.Enqueue(n, n);
+        if (heap.Count > k) heap.Dequeue(); // remove smallest
+    }
+    return heap.UnorderedItems.Select(x => x.Element).ToArray();
+}
+
+// Top K Frequent Elements
+int[] TopKFrequent(int[] nums, int k) {
+    var freq = new Dictionary<int, int>();
+    foreach (int n in nums) freq[n] = freq.GetValueOrDefault(n) + 1;
+    var heap = new PriorityQueue<int, int>();
+    foreach (var (num, cnt) in freq) {
+        heap.Enqueue(num, cnt);
+        if (heap.Count > k) heap.Dequeue();
+    }
+    return heap.UnorderedItems.Select(x => x.Element).ToArray();
+}
+
+// Max-heap trick: negate the priority
+// heap.Enqueue(val, -val); // simulates max-heap
+
+// Two heaps for streaming median:
+// maxHeap (lower half, negate) | minHeap (upper half)`,
+pairs:["Dictionary (Top K frequent)","BFS (Dijkstra)","Sorting (when k ≈ n)"],
+problems:["Kth Largest Element","Top K Frequent Elements","Merge K Sorted Lists","Find Median from Data Stream","Task Scheduler"],
+trick:"K Largest → min-heap size k (pop smallest when >k). K Smallest → max-heap (negate). Peek() is your answer."},
+
+{id:10,name:"Union-Find (DSU)",emoji:"🔗",rank:"⭐ Common",color:"#E17055",bg:"#E1705515",border:"#E1705540",tc:"O(α(n)) ≈ O(1)",sc:"O(n)",
+identify:["Dynamic connectivity problems","Number of connected components","Keywords: 'connected', 'same group', 'union', 'redundant edge'","Cycle detection in undirected graphs"],
+whenToUse:"Use when you need to dynamically group elements and check connectivity. Faster than BFS/DFS for repeated connectivity queries.",
+types:["Basic DSU","DSU with Rank + Path Compression","Weighted DSU"],
+template:`class UnionFind {
+    private int[] parent, rank;
+    public int Components { get; private set; }
+    public UnionFind(int n) {
+        parent = Enumerable.Range(0, n).ToArray();
+        rank = new int[n]; Components = n;
+    }
+    public int Find(int x) {
+        if (parent[x] != x) parent[x] = Find(parent[x]); // path compression
+        return parent[x];
+    }
+    public bool Union(int x, int y) {
+        int px = Find(x), py = Find(y);
+        if (px == py) return false;
+        if (rank[px] < rank[py]) parent[px] = py;
+        else if (rank[px] > rank[py]) parent[py] = px;
+        else { parent[py] = px; rank[px]++; }
+        Components--;
+        return true;
+    }
+    public bool Connected(int x, int y) => Find(x) == Find(y);
+}
+
+// Usage: Number of islands with DSU
+int NumIslandsDSU(char[][] grid) {
+    int R=grid.Length, C=grid[0].Length;
+    var uf = new UnionFind(R * C);
+    int islands = 0;
+    for (int r=0;r<R;r++) for (int c=0;c<C;c++)
+        if (grid[r][c]=='1') {
+            islands++;
+            if(r+1<R&&grid[r+1][c]=='1'&&uf.Union(r*C+c,(r+1)*C+c)) islands--;
+            if(c+1<C&&grid[r][c+1]=='1'&&uf.Union(r*C+c,r*C+c+1)) islands--;
+        }
+    return islands;
+}`,
+pairs:["BFS/DFS (alternative)","Kruskal's MST","Graph problems"],
+problems:["Number of Islands","Redundant Connection","Accounts Merge","Friend Circles","Smallest String With Swaps"],
+trick:"Always use both path compression AND union by rank. Track component count by decrementing on successful union."},
+
+{id:11,name:"Monotonic Stack",emoji:"📚",rank:"⭐ Common",color:"#B8E994",bg:"#B8E99415",border:"#B8E99440",tc:"O(n)",sc:"O(n)",
+identify:["Next greater/smaller element","Previous greater/smaller element","Histogram problems (largest rectangle)","Keywords: 'next greater', 'span', 'visible buildings'"],
+whenToUse:"Use when you need the nearest greater/smaller element for each item. Stack maintains monotonic order; O(n) instead of O(n²) brute force.",
+types:["Monotonic Decreasing (next greater)","Monotonic Increasing (next smaller)"],
+template:`// Next Greater Element
+int[] NextGreater(int[] nums) {
+    var result = new int[nums.Length];
+    Array.Fill(result, -1);
+    var stack = new Stack<int>(); // stores indices
+    for (int i = 0; i < nums.Length; i++) {
+        while (stack.Count > 0 && nums[stack.Peek()] < nums[i])
+            result[stack.Pop()] = nums[i]; // current is NGE
+        stack.Push(i);
+    }
+    return result;
+}
+
+// Largest Rectangle in Histogram
+int LargestRectangle(int[] heights) {
+    var stack = new Stack<int>();
+    int maxArea = 0, n = heights.Length;
+    for (int i = 0; i <= n; i++) {
+        int h = i == n ? 0 : heights[i];
+        while (stack.Count > 0 && heights[stack.Peek()] > h) {
+            int height = heights[stack.Pop()];
+            int width = stack.Count > 0 ? i - stack.Peek() - 1 : i;
+            maxArea = Math.Max(maxArea, height * width);
+        }
+        stack.Push(i);
+    }
+    return maxArea;
+}
+
+// Daily Temperatures
+int[] DailyTemps(int[] temps) {
+    var result = new int[temps.Length];
+    var stack = new Stack<int>();
+    for (int i = 0; i < temps.Length; i++) {
+        while (stack.Count > 0 && temps[stack.Peek()] < temps[i]) {
+            int idx = stack.Pop();
+            result[idx] = i - idx;
+        }
+        stack.Push(i);
+    }
+    return result;
+}`,
+pairs:["Two Pointers","DP","Arrays"],
+problems:["Daily Temperatures","Next Greater Element","Largest Rectangle in Histogram","Trapping Rain Water","Remove K Digits"],
+trick:"Decreasing stack → pop when current larger (next greater). Increasing stack → pop when current smaller (next smaller)."},
+
+{id:12,name:"Prefix Sum",emoji:"➕",rank:"⭐ Common",color:"#DDA0DD",bg:"#DDA0DD15",border:"#DDA0DD40",tc:"O(n) build, O(1) query",sc:"O(n)",
+identify:["Range sum queries","Subarray sum equals k","Count subarrays with condition","Keywords: 'range', 'subarray sum', 'between indices'"],
+whenToUse:"Use when you repeatedly query sums over ranges or need to count subarrays with a specific sum. Prefix sum + Dictionary enables O(n) for subarray sum = k.",
+types:["1D Prefix Sum","2D Prefix Sum","Prefix Sum + HashMap"],
+template:`// Build prefix sum
+int[] BuildPrefix(int[] nums) {
+    var prefix = new int[nums.Length + 1];
+    for (int i = 0; i < nums.Length; i++)
+        prefix[i+1] = prefix[i] + nums[i];
+    // range [i,j] = prefix[j+1] - prefix[i]
+    return prefix;
+}
+
+// Subarray sum equals K
+int SubarraySum(int[] nums, int k) {
+    var map = new Dictionary<int, int> { [0] = 1 };
+    int sum = 0, count = 0;
+    foreach (int n in nums) {
+        sum += n;
+        count += map.GetValueOrDefault(sum - k); // complement exists?
+        map[sum] = map.GetValueOrDefault(sum) + 1;
+    }
+    return count;
+}
+
+// 2D prefix sum
+int[,] Matrix2D(int[][] mat) {
+    int m=mat.Length, n=mat[0].Length;
+    var pre = new int[m+1, n+1];
+    for(int i=1;i<=m;i++) for(int j=1;j<=n;j++)
+        pre[i,j] = mat[i-1][j-1] + pre[i-1,j] + pre[i,j-1] - pre[i-1,j-1];
+    // query(r1,c1,r2,c2) = pre[r2+1,c2+1]-pre[r1,c2+1]-pre[r2+1,c1]+pre[r1,c1]
+    return pre;
+}`,
+pairs:["Dictionary (prefix + map)","Sliding Window","Binary Search"],
+problems:["Subarray Sum Equals K","Range Sum Query","Product of Array Except Self","Continuous Subarray Sum","Path Sum III"],
+trick:"Initialize map with {0:1}. Look for (currentSum - k) in map BEFORE adding currentSum."},
+
+{id:13,name:"Tries (Prefix Trees)",emoji:"🌿",rank:"📌 Specialized",color:"#74B9FF",bg:"#74B9FF15",border:"#74B9FF40",tc:"O(L) per op",sc:"O(N·L)",
+identify:["Word search / autocomplete","Longest common prefix","Keywords: 'dictionary', 'prefix', 'word', 'search words'","XOR maximum (with binary trie)"],
+whenToUse:"Use for efficient string prefix operations. Faster than sorting+binary search for prefix queries. Also powerful for XOR problems using binary trie.",
+types:["Standard Trie","Compressed Trie","Binary Trie (XOR)"],
+template:`class TrieNode {
+    public Dictionary<char, TrieNode> Children = new();
+    public bool IsEnd = false;
+}
+
+class Trie {
+    private TrieNode root = new TrieNode();
+
+    public void Insert(string word) {
+        var node = root;
+        foreach (char ch in word) {
+            if (!node.Children.ContainsKey(ch))
+                node.Children[ch] = new TrieNode();
+            node = node.Children[ch];
+        }
+        node.IsEnd = true;
+    }
+
+    public bool Search(string word) {
+        var node = root;
+        foreach (char ch in word) {
+            if (!node.Children.ContainsKey(ch)) return false;
+            node = node.Children[ch];
+        }
+        return node.IsEnd;
+    }
+
+    public bool StartsWith(string prefix) {
+        var node = root;
+        foreach (char ch in prefix) {
+            if (!node.Children.ContainsKey(ch)) return false;
+            node = node.Children[ch];
+        }
+        return true;
+    }
+}
+// Word Search II: Build trie of words → DFS on grid`,
+pairs:["DFS (Word Search II)","Backtracking","Dictionary (simpler but slower)"],
+problems:["Implement Trie","Word Search II","Design Add and Search Words","Replace Words","Maximum XOR of Two Numbers"],
+trick:"Use Dictionary not array[26] for sparse alphabets. Mark IsEnd at word end. Deletion = unmark IsEnd."},
+
+{id:14,name:"Topological Sort",emoji:"📋",rank:"📌 Graph Specific",color:"#55EFC4",bg:"#55EFC415",border:"#55EFC440",tc:"O(V + E)",sc:"O(V + E)",
+identify:["Task scheduling with dependencies","Course prerequisites","Keywords: 'order', 'prerequisite', 'dependency', 'DAG'","Detect cycle in directed graph"],
+whenToUse:"Use for ordering tasks with dependencies (DAG). Kahn's (BFS+in-degree) or DFS-based. If a cycle exists, topological sort is impossible.",
+types:["Kahn's Algorithm (BFS)","DFS-based"],
+template:`// Kahn's Algorithm (BFS + in-degree)
+int[] TopoSort(int n, int[][] prereqs) {
+    var graph = new List<List<int>>();
+    var inDeg = new int[n];
+    for (int i=0;i<n;i++) graph.Add(new List<int>());
+    foreach (var p in prereqs) { graph[p[1]].Add(p[0]); inDeg[p[0]]++; }
+    var queue = new Queue<int>();
+    for (int i=0;i<n;i++) if (inDeg[i]==0) queue.Enqueue(i);
+    var order = new List<int>();
+    while (queue.Count > 0) {
+        int node = queue.Dequeue();
+        order.Add(node);
+        foreach (int nb in graph[node])
+            if (--inDeg[nb]==0) queue.Enqueue(nb);
+    }
+    return order.Count==n ? order.ToArray() : Array.Empty<int>();
+}
+
+// DFS-based (post-order)
+int[] TopoSortDfs(int n, int[][] edges) {
+    var g = new List<List<int>>();
+    for(int i=0;i<n;i++) g.Add(new List<int>());
+    foreach(var e in edges) g[e[0]].Add(e[1]);
+    var vis = new int[n]; // 0=new,1=visiting,2=done
+    var res = new List<int>();
+    bool Dfs(int v) {
+        if (vis[v]==1) return false; // cycle!
+        if (vis[v]==2) return true;
+        vis[v]=1;
+        foreach(int u in g[v]) if(!Dfs(u)) return false;
+        vis[v]=2; res.Add(v); return true;
+    }
+    for(int i=0;i<n;i++) if(!Dfs(i)) return Array.Empty<int>();
+    res.Reverse(); return res.ToArray();
+}`,
+pairs:["BFS (Kahn's)","DFS","Dynamic Programming on DAG"],
+problems:["Course Schedule","Course Schedule II","Alien Dictionary","Sequence Reconstruction","Build a Matrix With Conditions"],
+trick:"order.Length < n → cycle exists. Kahn's is easier to code. DFS reverses post-order."},
+];
+
+const QUESTIONS=[
+{id:"q1",text:"What is the primary data structure?",opts:[{l:"Array / String",n:"q2"},{l:"Linked List",n:"q_ll"},{l:"Tree / Graph",n:"q_graph"},{l:"Other / Unclear",n:"q_other"}]},
+{id:"q2",text:"What does the problem ask for?",opts:[{l:"Subarray / Substring result",n:"q3"},{l:"Find a target / index",n:"q_search"},{l:"Count / sum over range",n:"q_prefix"},{l:"All combinations / permutations",n:"q_bt"},{l:"Optimal (min/max) result",n:"q_dp"}]},
+{id:"q3",text:"Is the subarray/substring fixed or variable size?",opts:[{l:"Fixed size k",r:[1]},{l:"Variable / longest / shortest",n:"q4"}]},
+{id:"q4",text:"Does the problem involve pairs or sorted input?",opts:[{l:"Yes — sorted or pair/triplet sums",r:[2]},{l:"No — just need optimal window",r:[1]}]},
+{id:"q_ll",text:"What do you need from the linked list?",opts:[{l:"Detect cycle / find middle",r:[3]},{l:"Reorder / merge",r:[2]}]},
+{id:"q_graph",text:"What kind of graph problem?",opts:[{l:"Shortest path (unweighted)",r:[5]},{l:"All paths / components / backtrack",r:[6]},{l:"Dependency order / scheduling",r:[14]},{l:"Dynamic connectivity / grouping",r:[10]}]},
+{id:"q_search",text:"Is the array sorted?",opts:[{l:"Yes — sorted or rotated",r:[4]},{l:"No — need top-K or streaming",r:[9]}]},
+{id:"q_prefix",text:"Repeated range queries or subarray sum = k?",opts:[{l:"Yes",r:[12]},{l:"No — more like a sliding condition",r:[1]}]},
+{id:"q_bt",text:"Do repeated subproblems exist?",opts:[{l:"Yes — overlapping subproblems",r:[7]},{l:"No — explore + undo is enough",r:[8]}]},
+{id:"q_dp",text:"Does the problem have overlapping subproblems?",opts:[{l:"Yes",n:"q_dp2"},{l:"No — greedy or sort works",r:[4]}]},
+{id:"q_dp2",text:"Is it string-based or involves prefix matching?",opts:[{l:"Yes — prefix / word matching",r:[13]},{l:"No — numeric / grid / sequences",r:[7]}]},
+{id:"q_other",text:"Which best describes the goal?",opts:[{l:"Next greater/smaller in sequence",r:[11]},{l:"Top K / median / merge sorted",r:[9]},{l:"Connectivity / grouping",r:[10]},{l:"Prefix / word dictionary",r:[13]}]},
+];
+
+const CHEAT=[
+{p:"Sliding Window",s:"contiguous subarray/substring",t:"O(n)",b:"Max/min in subarray of size k"},
+{p:"Two Pointers",s:"sorted array + pair/triplet",t:"O(n)",b:"Pair sums, palindromes, partitioning"},
+{p:"Fast & Slow",s:"cycle / middle of list",t:"O(n)",b:"Linked list cycle detection"},
+{p:"Binary Search",s:"sorted / monotonic + find min/max",t:"O(log n)",b:"Searching, search on answer"},
+{p:"BFS",s:"shortest path / level order / nearest",t:"O(V+E)",b:"Unweighted shortest path"},
+{p:"DFS",s:"all paths / components / backtracking",t:"O(V+E)",b:"Explore all options, cycles"},
+{p:"Dynamic Programming",s:"optimal + overlapping subproblems",t:"O(n²)",b:"Count ways, max/min with decisions"},
+{p:"Backtracking",s:"generate all / constraint + undo",t:"O(2ⁿ)",b:"All subsets, permutations, N-queens"},
+{p:"Heap",s:"top K / streaming / merge sorted",t:"O(n log k)",b:"K largest/smallest, median"},
+{p:"Union-Find",s:"connectivity / same group / cycle",t:"O(α(n))",b:"Dynamic connected components"},
+{p:"Monotonic Stack",s:"next greater/smaller / histogram",t:"O(n)",b:"NGE, span, histogram area"},
+{p:"Prefix Sum",s:"range sum / subarray sum = k",t:"O(n)",b:"Range queries, subarray count"},
+{p:"Trie",s:"prefix search / word dictionary",t:"O(L)",b:"Autocomplete, word search"},
+{p:"Topological Sort",s:"dependency order / DAG / prerequisites",t:"O(V+E)",b:"Task scheduling, course order"},
+];
+
+const SC={
+inProgress:{label:"In Progress",color:"#FFD700",bg:"#FFD70020",border:"#FFD70050",icon:"⏳"},
+done:{label:"Completed",color:"#56D364",bg:"#56D36420",border:"#56D36450",icon:"✅"},
+};
+
+function App(){
+const [active,setActive]=useState(P[0]);
+const [tab,setTab]=useState("identify");
+const [search,setSearch]=useState("");
+const [view,setView]=useState("patterns");
+const [copied,setCopied]=useState(false);
+const [fhist,setFhist]=useState([]);
+const [curQ,setCurQ]=useState("q1");
+const [fresult,setFresult]=useState(null);
+const [fdone,setFdone]=useState(false);
+const [prog,setProg]=useState(()=>{try{return JSON.parse(localStorage.getItem("dsa_progress")||"{}");}catch{return {};}});
+
+/* ───────── PROBLEM LOG DATA ───────── */
+const ALL_LOG_PROBLEMS=[
+/* ── SLIDING WINDOW ── */
+{id:"l1",name:"Longest Substring Without Repeating Characters",lcNum:"3",diff:"medium",pattern:"Sliding Window",alts:["Two Pointers","Hash Map"],
+approach:"Variable-size sliding window with a HashSet or Dictionary tracking current chars. Expand right pointer, adding chars. When duplicate found shrink left until duplicate removed. Track max window length. O(n) time O(k) space where k = charset size.",
+followups:["Longest Substring with At Most Two Distinct Chars (LC 159)","Longest Substring with At Most K Distinct Chars (LC 340)","Minimum Window Substring (LC 76)","Fruit Into Baskets (LC 904)"],
+similar:["Permutation in String","Minimum Window Substring","Longest Repeating Character Replacement"],
+notes:"Use Dictionary<char,int> for counts so you handle duplicates correctly when shrinking. Edge cases: empty string → 0, single char → 1. Classic variable-window warm-up.",date:"2026-03-14"},
+
+{id:"l2",name:"Minimum Window Substring",lcNum:"76",diff:"hard",pattern:"Sliding Window",alts:["Two Pointers","Hash Map"],
+approach:"Variable-size sliding window with two freq maps — one for t, one for the window. Use 'formed' counter vs 'required' (distinct chars in t fully satisfied) to avoid scanning the map each step. Expand right, shrink left once formed==required. Track best (start, len). O(|s|+|t|) time O(|s|+|t|) space.",
+followups:["Substring with Concatenation of All Words (LC 30)","Smallest Range Covering Elements from K Lists (LC 632)","Find All Anagrams in a String (LC 438)","Minimum Window Subsequence (LC 727)"],
+similar:["Permutation in String","Find All Anagrams in a String","Longest Substring Without Repeating Chars"],
+notes:"'Formed' counter avoids scanning 26-char map each step → O(1) per slide. Edge case: t longer than s → return ''. Characters in t may repeat — use counts not just presence.",date:"2026-03-14"},
+
+{id:"l3",name:"Max Sum Subarray of Size K",lcNum:"",diff:"easy",pattern:"Sliding Window",alts:["Prefix Sum"],
+approach:"Fixed-size window of size k. Build first window sum in O(k), then slide: subtract element leaving left, add element entering right. Track running max. O(n) time O(1) space. This is the canonical fixed-window template — master before variable-window.",
+followups:["Maximum Average Subarray I (LC 643)","Max Consecutive Ones III (LC 1004)","Subarray Product Less Than K (LC 713)","Diet Plan Performance (LC 1176)"],
+similar:["Maximum Average Subarray I","Sliding Window Maximum","Subarray Sum Equals K"],
+notes:"Prefix sum alternative: max(prefix[i+k] - prefix[i]). Both O(n) but sliding window is O(1) space. Great warm-up before Min Window Substring.",date:"2026-03-14"},
+
+{id:"l4",name:"Permutation in String",lcNum:"567",diff:"medium",pattern:"Sliding Window",alts:["Two Pointers","Hash Map"],
+approach:"Fixed-size window of |s1| over s2. Maintain int[26] freq for s1 and window. Use a 'matches' counter — how many of 26 chars have equal counts. On each slide: update right char (adjust matches), remove left char (adjust matches). If matches==26, permutation exists. O(|s1|+|s2|) time O(1) space.",
+followups:["Find All Anagrams in a String (LC 438) — same template, collect all valid start indices","Minimum Window Substring (LC 76) — variable window variant","Longest Substring with At Most K Distinct (LC 340)","Check Inclusion extended: return all start indices"],
+similar:["Minimum Window Substring","Find All Anagrams in a String","Longest Substring Without Repeating Chars"],
+notes:"'Matches' counter reduces inner-loop check from O(26) to O(1). LC 438 is the near-identical twin — practice back-to-back. Common mistake: forgetting to set up the initial window of size |s1| before starting slide.",date:"2026-03-14"},
+
+/* ── TWO POINTERS ── */
+{id:"l5",name:"Two Sum II – Input Array Is Sorted",lcNum:"167",diff:"medium",pattern:"Two Pointers",alts:["Binary Search","Hash Map"],
+approach:"Opposite-direction two pointers on sorted array. Start left=0, right=n-1. If sum < target → left++. If sum > target → right--. If sum == target → return. O(n) time O(1) space. No extra space unlike hash map Two Sum.",
+followups:["Two Sum (LC 1) — unsorted, use hash map","3Sum (LC 15)","4Sum (LC 18)","Two Sum Less Than K (LC 1099)"],
+similar:["3Sum","Container With Most Water","Two Sum"],
+notes:"Only works because array is sorted. For unsorted → use hash map O(n) or sort first O(n log n). Return 1-indexed per the problem.",date:"2026-03-14"},
+
+{id:"l6",name:"3Sum",lcNum:"15",diff:"medium",pattern:"Two Pointers",alts:["Sorting","Hash Map"],
+approach:"Sort array. Fix one element i, run two-pointer on the rest (i+1 to n-1). For each i, left=i+1, right=n-1, find pairs summing to -nums[i]. Skip duplicates at both i and after a match. O(n²) time O(1) extra space.",
+followups:["4Sum (LC 18) — add one more outer loop","3Sum Closest (LC 16)","3Sum Smaller (LC 259)","Count triplets that form geometric progression"],
+similar:["Two Sum II","4Sum","3Sum Closest"],
+notes:"Sort first! Skip dups: if(i>0 && nums[i]==nums[i-1]) continue. After match: l++, r--, then skip dups on both. Classic interview problem — know the dedup logic cold.",date:"2026-03-14"},
+
+{id:"l7",name:"Container With Most Water",lcNum:"11",diff:"medium",pattern:"Two Pointers",alts:["Greedy"],
+approach:"Opposite-direction two pointers. Area = min(height[l], height[r]) * (r - l). Always move the pointer with the smaller height (moving taller can only shrink width without guarantee of height gain). O(n) time O(1) space.",
+followups:["Trapping Rain Water (LC 42) — harder variant, sum all trapped water","Largest Rectangle in Histogram (LC 84) — monotonic stack approach","Container With Most Water variant: with obstacles"],
+similar:["Trapping Rain Water","Largest Rectangle in Histogram"],
+notes:"Greedy insight: moving the taller pointer can never improve the answer since it's bounded by the shorter. The only hope is to find a taller short side. Classic greedy two-pointer justification.",date:"2026-03-14"},
+
+{id:"l8",name:"Trapping Rain Water",lcNum:"42",diff:"hard",pattern:"Two Pointers",alts:["Monotonic Stack","Prefix Sum"],
+approach:"Two pointers from both ends. Maintain leftMax and rightMax. Water at position i = min(leftMax, rightMax) - height[i]. Move the pointer whose max is smaller, updating max as we go. O(n) time O(1) space. Alternative: precompute prefix/suffix max arrays O(n) space.",
+followups:["Container With Most Water (LC 11) — simpler variant","Largest Rectangle in Histogram (LC 84)","Trapping Rain Water II (LC 407) — 3D version with BFS/heap","Pour Water (LC 755)"],
+similar:["Container With Most Water","Largest Rectangle in Histogram","Sliding Window Maximum"],
+notes:"Monotonic stack approach also O(n) and more intuitive: pop when current > stack top, calculate trapped water horizontally. Two-pointer approach is optimal for space. Classic hard — understand both approaches.",date:"2026-03-14"},
+
+{id:"l9",name:"Valid Palindrome",lcNum:"125",diff:"easy",pattern:"Two Pointers",alts:["String"],
+approach:"Two pointers from both ends. Skip non-alphanumeric chars using char.IsLetterOrDigit(). Compare char.ToLower() at each valid position. If mismatch → false. O(n) time O(1) space.",
+followups:["Valid Palindrome II (LC 680) — can delete at most one char","Palindromic Substrings (LC 647)","Longest Palindromic Subsequence (LC 516)","Find if string can be palindrome after one deletion"],
+similar:["Valid Palindrome II","Palindromic Substrings","Longest Palindromic Substring"],
+notes:"Clean up with char.IsLetterOrDigit() — don't forget numbers also count as valid chars. Case-insensitive compare. Can also use s.Where(char.IsLetterOrDigit).Select(char.ToLower) to clean string first but that's O(n) space.",date:"2026-03-14"},
+
+/* ── FAST & SLOW POINTERS ── */
+{id:"l10",name:"Linked List Cycle",lcNum:"141",diff:"easy",pattern:"Fast & Slow Pointers",alts:["Hash Set"],
+approach:"Floyd's cycle detection. slow moves 1 step, fast moves 2 steps. If they meet → cycle exists. If fast reaches null → no cycle. O(n) time O(1) space. Hash set alternative: store visited nodes, O(n) space.",
+followups:["Linked List Cycle II (LC 142) — find where cycle starts","Find Duplicate Number (LC 287) — array as linked list","Happy Number (LC 202)","Circular Array Loop (LC 457)"],
+similar:["Linked List Cycle II","Find the Duplicate Number","Happy Number"],
+notes:"Always check fast != null && fast.next != null before advancing. Reset one pointer to head after meeting point to find cycle start (LC 142). The math: distance from head to cycle start equals distance from meeting point to cycle start.",date:"2026-03-14"},
+
+{id:"l11",name:"Find the Duplicate Number",lcNum:"287",diff:"medium",pattern:"Fast & Slow Pointers",alts:["Binary Search","Bit Manipulation"],
+approach:"Treat array as linked list where value = next index. Apply Floyd's cycle detection. Phase 1: find meeting point (slow=nums[slow], fast=nums[nums[fast]]). Phase 2: reset slow to 0, move both 1 step → where they meet is the duplicate. O(n) time O(1) space.",
+followups:["Find All Duplicates in an Array (LC 442)","Missing Number (LC 268)","First Missing Positive (LC 41)","Set Mismatch (LC 645)"],
+similar:["Linked List Cycle II","Missing Number","Find All Duplicates in Array"],
+notes:"Constraint that nums are in [1,n] is what makes the linked-list analogy work. Binary search alternative: count numbers ≤ mid in array — if > mid, duplicate is in [1,mid]. Neither modifies the array (unlike XOR/negation approaches).",date:"2026-03-14"},
+
+{id:"l12",name:"Happy Number",lcNum:"202",diff:"easy",pattern:"Fast & Slow Pointers",alts:["Hash Set"],
+approach:"Sum of squares of digits until 1 or cycle. Use fast & slow: slow does one step, fast does two digit-sum steps. If fast==1 → happy. If slow==fast → cycle → not happy. Hash set alternative simpler but O(n) space.",
+followups:["Linked List Cycle (LC 141) — same algorithm, different domain","Add Digits (LC 258)","Ugly Number (LC 263)","Perfect Squares (LC 279)"],
+similar:["Linked List Cycle","Find the Duplicate Number"],
+notes:"Digit sum helper: while(n>0) { sum+=(n%10)*(n%10); n/=10; }. Fast & slow is clever here but HashSet<int> is more readable and fine for interviews — mention both.",date:"2026-03-14"},
+
+{id:"l13",name:"Middle of the Linked List",lcNum:"876",diff:"easy",pattern:"Fast & Slow Pointers",alts:["Array (collect all nodes)"],
+approach:"fast and slow start at head. slow moves 1 step, fast moves 2. When fast == null or fast.next == null, slow is at the middle. For even-length lists this returns the second middle node. O(n) time O(1) space.",
+followups:["Reorder List (LC 143) — find middle, reverse second half, merge","Palindrome Linked List (LC 234) — same steps then compare","Sort List (LC 148) — merge sort using find-middle","Delete the Middle Node of a Linked List (LC 2095)"],
+similar:["Reorder List","Palindrome Linked List","Sort List"],
+notes:"If you want the first middle of even-length list: while(fast.next != null && fast.next.next != null). Commonly needed as a sub-step inside Reorder List and Palindrome Linked List — memorize this template cold.",date:"2026-03-14"},
+
+{id:"l14",name:"Palindrome Linked List",lcNum:"234",diff:"easy",pattern:"Fast & Slow Pointers",alts:["Array (collect values)"],
+approach:"Three steps: 1) find middle with fast/slow, 2) reverse second half in-place, 3) compare both halves node by node. Optionally restore list. O(n) time O(1) space. Array approach: collect all values then two-pointer compare — simpler but O(n) space.",
+followups:["Reorder List (LC 143)","Middle of the Linked List (LC 876)","Valid Palindrome (LC 125) — string version","Palindrome Number (LC 9)"],
+similar:["Middle of the Linked List","Reorder List","Valid Palindrome"],
+notes:"Combining find-middle + reverse-list + compare is a classic multi-step problem. In interviews, state all three steps before coding. Restoring the list shows good practice but isn't always required.",date:"2026-03-14"},
+
+/* ── BINARY SEARCH ── */
+{id:"l15",name:"Binary Search",lcNum:"704",diff:"easy",pattern:"Binary Search",alts:["Two Pointers"],
+approach:"Classic binary search. lo=0, hi=n-1. mid = lo + (hi-lo)/2 (overflow-safe). If arr[mid]==target → return mid. If arr[mid]<target → lo=mid+1. Else hi=mid-1. Loop condition: lo<=hi. O(log n) time O(1) space.",
+followups:["First Bad Version (LC 278) — same template, different predicate","Search Insert Position (LC 35)","Find First and Last Position (LC 34)","Count of Range Sum (LC 327)"],
+similar:["Search in Rotated Sorted Array","Find Minimum in Rotated Sorted Array","Search a 2D Matrix"],
+notes:"mid = lo + (hi-lo)/2 prevents integer overflow — always use this. Template: if looking for leftmost position use hi=mid-1 on match; for rightmost use lo=mid+1 on match.",date:"2026-03-14"},
+
+{id:"l16",name:"Search in Rotated Sorted Array",lcNum:"33",diff:"medium",pattern:"Binary Search",alts:["Two Pointers"],
+approach:"At mid, one half is always sorted. Check if nums[lo] <= nums[mid] → left half is sorted. Check if target is in that sorted half; if yes shrink to it, else go right. Repeat for right half sorted case. O(log n) time O(1) space.",
+followups:["Find Minimum in Rotated Sorted Array (LC 153)","Search in Rotated Sorted Array II (LC 81) — with duplicates","Find Rotation Count","Search in Rotated Array variant: multiple rotations"],
+similar:["Find Minimum in Rotated Sorted Array","Binary Search","Search a 2D Matrix"],
+notes:"Key invariant: one half is always sorted after rotation. Check which half is sorted first, then check if target falls in it. Duplicates version (LC 81) degrades to O(n) worst case — mention this.",date:"2026-03-14"},
+
+{id:"l17",name:"Find Minimum in Rotated Sorted Array",lcNum:"153",diff:"medium",pattern:"Binary Search",alts:["Linear Scan"],
+approach:"Binary search where we're looking for the inflection point. If nums[mid] > nums[hi] → minimum is in right half (lo=mid+1). Else → minimum is in left half including mid (hi=mid). Loop until lo==hi. Return nums[lo]. O(log n) time O(1) space.",
+followups:["Search in Rotated Sorted Array (LC 33)","Find Minimum in Rotated Sorted Array II (LC 154) — with duplicates","Find Rotation Count","Peak Index in Mountain Array (LC 852)"],
+similar:["Search in Rotated Sorted Array","Binary Search","Peak Index in Mountain Array"],
+notes:"Compare mid to hi (not lo) — that's the key. When nums[mid] > nums[hi], the min must be in (mid, hi]. When nums[mid] <= nums[hi], the min is in [lo, mid]. LC 154 with duplicates: worst case O(n).",date:"2026-03-14"},
+
+{id:"l18",name:"Koko Eating Bananas",lcNum:"875",diff:"medium",pattern:"Binary Search",alts:["Greedy"],
+approach:"Binary search on the answer (eating speed k). Range: [1, max(piles)]. For each candidate speed mid, compute total hours = sum of ceil(pile/mid). If hours <= h → valid, try smaller (hi=mid). Else lo=mid+1. O(n log(max)) time O(1) space.",
+followups:["Minimum Number of Days to Make m Bouquets (LC 1482)","Capacity To Ship Packages Within D Days (LC 1011)","Split Array Largest Sum (LC 410)","Minimize Max Distance to Gas Station (LC 774)"],
+similar:["Capacity to Ship Packages","Split Array Largest Sum","Minimum Days to Make Bouquets"],
+notes:"Classic 'binary search on answer' template: find minimum valid value. Feasibility function is the key — here it's sum(ceil(p/mid)) <= h. Integer ceiling: (pile + mid - 1) / mid.",date:"2026-03-14"},
+
+{id:"l19",name:"Median of Two Sorted Arrays",lcNum:"4",diff:"hard",pattern:"Binary Search",alts:["Merge (O(m+n))"],
+approach:"Binary search on partition of the smaller array. Find partition point where left half of both arrays combined has (m+n)/2 elements and max(left) <= min(right). Adjust lo/hi based on cross-comparison. O(log(min(m,n))) time O(1) space.",
+followups:["Kth Smallest Element in Two Sorted Arrays","Kth Smallest in a Sorted Matrix (LC 378)","Find K-th Smallest Pair Distance (LC 719)"],
+similar:["Kth Smallest Element in Sorted Matrix","Find K-th Smallest Pair Distance"],
+notes:"Hardest binary search problem. Always binary search on the smaller array for efficiency. Handle edge partitions (left=INT_MIN, right=INT_MAX). Treat as 'partition binary search' not 'value binary search'. Often asked at Google for senior roles.",date:"2026-03-14"},
+
+/* ── BFS ── */
+{id:"l20",name:"Binary Tree Level Order Traversal",lcNum:"102",diff:"medium",pattern:"BFS",alts:["DFS with level tracking"],
+approach:"Standard BFS with Queue. At each level, record queue size first, then process exactly that many nodes, adding their children. This cleanly separates levels. O(n) time O(n) space (queue can hold a full level).",
+followups:["Binary Tree Level Order Traversal II (LC 107) — reverse result","Binary Tree Zigzag Level Order (LC 103) — alternate direction","Average of Levels (LC 637)","Right Side View (LC 199)"],
+similar:["Binary Tree Right Side View","Binary Tree Zigzag Traversal","N-ary Tree Level Order"],
+notes:"The 'capture levelSize before loop' pattern is the key: int size = q.Count; for(int i=0;i<size;i++){...}. This is cleaner than using null sentinels. DFS alternative: pass depth parameter, result[depth].Add(val).",date:"2026-03-14"},
+
+{id:"l21",name:"Word Ladder",lcNum:"127",diff:"hard",pattern:"BFS",alts:["Bidirectional BFS"],
+approach:"BFS treating each word as a node. Neighbors = words differing by exactly one char. Build adjacency by trying all 26 letter substitutions at each position and checking against a word set. BFS guarantees shortest path. O(m²·n) time where m=word length, n=wordList size.",
+followups:["Word Ladder II (LC 126) — return all shortest paths (DFS+BFS)","Minimum Genetic Mutation (LC 433) — same template","Open the Lock (LC 752)","Word Transformation"],
+similar:["Minimum Genetic Mutation","Open the Lock","Jump Game IV"],
+notes:"Use HashSet for wordList for O(1) lookup. Remove words from set when visited (instead of separate visited set) to avoid revisiting. Bidirectional BFS cuts search space roughly in half — mention as optimization.",date:"2026-03-14"},
+
+{id:"l22",name:"Rotting Oranges",lcNum:"994",diff:"medium",pattern:"BFS",alts:["DFS (not optimal — no level tracking)"],
+approach:"Multi-source BFS. Start by adding all rotten oranges to queue simultaneously. BFS spreads rot level by level (each level = 1 minute). Count fresh oranges. After BFS, if fresh > 0 → return -1, else return minutes elapsed. O(m·n) time O(m·n) space.",
+followups:["Walls and Gates (LC 286) — same multi-source BFS template","01 Matrix (LC 542) — distance to nearest 0","Shortest Path in Binary Matrix (LC 1091)","Zombie in Matrix"],
+similar:["Walls and Gates","01 Matrix","Shortest Path in Binary Matrix"],
+notes:"Multi-source BFS: enqueue ALL sources before starting — this is what makes it correct. Track fresh count separately; don't count empty cells. Minutes = BFS levels - 1 (or just track it naturally in the loop).",date:"2026-03-14"},
+
+{id:"l23",name:"Shortest Path in Binary Matrix",lcNum:"1091",diff:"medium",pattern:"BFS",alts:["A* Search"],
+approach:"BFS from (0,0). Explore all 8 directions. Mark cell as visited (set to 1) when enqueued, not dequeued. Return steps when (n-1,n-1) reached. If start or end is blocked → return -1. O(n²) time O(n²) space.",
+followups:["Shortest Path in a Grid with Obstacles Elimination (LC 1293)","Minimum Path Sum (LC 64) — DP variant","Path With Minimum Effort (LC 1631)","Knight Minimum Moves"],
+similar:["Rotting Oranges","01 Matrix","Walls and Gates"],
+notes:"Mark visited when enqueuing not dequeuing — prevents same cell being added multiple times. 8-directional movement: int[][] dirs = {{-1,-1},{-1,0},{-1,1},{0,-1},{0,1},{1,-1},{1,0},{1,1}}.",date:"2026-03-14"},
+
+{id:"l24",name:"Number of Islands",lcNum:"200",diff:"medium",pattern:"BFS",alts:["DFS","Union-Find"],
+approach:"BFS or DFS from each unvisited '1'. Mark all connected '1's as '0' (or visited). Count how many times we start a new BFS — that's the island count. O(m·n) time O(min(m,n)) space for BFS queue.",
+followups:["Max Area of Island (LC 695) — track island size","Number of Islands II (LC 305) — dynamic, Union-Find","Number of Distinct Islands (LC 694)","Surrounded Regions (LC 130)"],
+similar:["Max Area of Island","Number of Provinces","Surrounded Regions"],
+notes:"BFS, DFS, and Union-Find all work. BFS queue size O(min(m,n)) since a snake-like island fills queue by width. DFS risks stack overflow on large grids. Union-Find is best for dynamic connectivity (islands added over time).",date:"2026-03-14"},
+
+{id:"l25",name:"Binary Tree Right Side View",lcNum:"199",diff:"medium",pattern:"BFS",alts:["DFS (right-first preorder)"],
+approach:"BFS level-order traversal. At each level, record only the last node (rightmost visible). O(n) time O(n) space. DFS alternative: traverse right subtree before left, record node at depth if result list doesn't have an entry for that depth yet.",
+followups:["Binary Tree Level Order Traversal (LC 102)","Binary Tree Left Side View (same, take first not last)","Average of Levels (LC 637)","Deepest Leaves Sum (LC 1302)"],
+similar:["Binary Tree Level Order Traversal","Binary Tree Zigzag Traversal","Average of Levels in Binary Tree"],
+notes:"BFS is intuitive: last node in each level queue iteration. DFS is elegant: right-to-left preorder, first visit at each depth is the rightmost. DFS approach is O(h) space vs O(n) for BFS.",date:"2026-03-14"},
+
+/* ── DFS ── */
+{id:"l26",name:"Number of Islands (DFS)",lcNum:"200",diff:"medium",pattern:"DFS / Backtracking",alts:["BFS","Union-Find"],
+approach:"DFS from each unvisited '1'. Recursively mark all 4-directionally connected '1's as visited. Count DFS calls from main loop. O(m·n) time O(m·n) space (recursion stack in worst case). Mark visited by setting grid[r][c]='0'.",
+followups:["Max Area of Island (LC 695)","Pacific Atlantic Water Flow (LC 417)","Surrounded Regions (LC 130)","Number of Enclaves (LC 1020)"],
+similar:["Max Area of Island","Pacific Atlantic Water Flow","Surrounded Regions"],
+notes:"In-place marking (grid[r][c]='0') avoids a visited array. Check bounds + not '0' in one condition. Recursion stack can overflow for 300x300 grid of '1's — mention BFS as stack-safe alternative.",date:"2026-03-14"},
+
+{id:"l27",name:"Pacific Atlantic Water Flow",lcNum:"417",diff:"medium",pattern:"DFS / Backtracking",alts:["BFS"],
+approach:"Reverse thinking: instead of water flowing down to ocean, do DFS inward from each ocean border. Mark cells reachable from Pacific (left/top borders) and from Atlantic (right/bottom borders). Answer = intersection. O(m·n) time O(m·n) space.",
+followups:["Number of Islands (LC 200)","Surrounded Regions (LC 130)","Number of Enclaves (LC 1020)","Maximum Area of Island (LC 695)"],
+similar:["Number of Islands","Surrounded Regions","Number of Enclaves"],
+notes:"Reverse direction is the key insight — flow uphill from ocean borders. DFS condition: next cell must be >= current cell (water flows in reverse uphill). Works for both BFS and DFS — BFS is slightly easier to reason about bounds.",date:"2026-03-14"},
+
+{id:"l28",name:"Word Search",lcNum:"79",diff:"medium",pattern:"DFS / Backtracking",alts:["Trie (for Word Search II)"],
+approach:"DFS + backtracking from each cell matching word[0]. At each step try 4 directions. Mark cell as visited by temporarily replacing with '#'. Restore after backtrack. O(m·n·4^L) time where L=word length. O(L) space for recursion stack.",
+followups:["Word Search II (LC 212) — search multiple words, use Trie","Boggle (find all dictionary words)","Word Break (LC 139) — DP variant","Unique Paths (LC 62)"],
+similar:["Word Search II","Path Sum","Sudoku Solver"],
+notes:"Backtrack by restoring grid[r][c] after recursive call. The '#' trick is cleaner than a visited bool array. For multiple words (LC 212), build a Trie first to prune DFS early — without it TLE is common.",date:"2026-03-14"},
+
+{id:"l29",name:"Course Schedule",lcNum:"207",diff:"medium",pattern:"DFS / Backtracking",alts:["BFS (Kahn's Algorithm)","Topological Sort"],
+approach:"Build directed graph from prerequisites. DFS cycle detection using 3-state coloring: 0=unvisited, 1=visiting (in current path), 2=done. If we reach a node in state 1 → cycle → impossible. O(V+E) time O(V+E) space.",
+followups:["Course Schedule II (LC 210) — return the actual order","Alien Dictionary (LC 269) — build graph from word ordering","Sequence Reconstruction (LC 444)","Minimum Height Trees (LC 310)"],
+similar:["Course Schedule II","Alien Dictionary","Minimum Height Trees"],
+notes:"Kahn's (BFS) is often easier to code in interviews. DFS needs the 3-state visited array — 2 states is wrong (causes false negatives). order.Count < n → cycle exists (for Kahn's). Both are O(V+E).",date:"2026-03-14"},
+
+{id:"l30",name:"All Paths From Source to Target",lcNum:"797",diff:"medium",pattern:"DFS / Backtracking",alts:["BFS (collect all paths)"],
+approach:"DFS + backtracking from node 0 to node n-1. Maintain current path list. At each node push to path, explore all neighbors, pop after returning. When node == n-1, add copy of path to result. O(2^n · n) time (exponential paths in DAG). O(n) space for recursion.",
+followups:["Course Schedule (LC 207) — same graph, cycle detection","Number of Ways to Arrive at Destination (LC 1976)","Find if Path Exists in Graph (LC 1971)","Count All Paths in DAG"],
+similar:["Course Schedule","Find if Path Exists in Graph","Network Delay Time"],
+notes:"DAG is given so no cycle handling needed. Always collect a copy of the path (new List<int>(path)) not the reference — common bug. Backtracking pop is path.RemoveAt(path.Count - 1).",date:"2026-03-14"},
+
+/* ── DYNAMIC PROGRAMMING ── */
+{id:"l31",name:"Coin Change",lcNum:"322",diff:"medium",pattern:"Dynamic Programming",alts:["BFS (unweighted)","DFS + Memoization"],
+approach:"1D DP bottom-up. dp[i] = min coins to make amount i. Initialize dp[0]=0, rest=INT_MAX. For each amount from 1 to amount, try all coins: dp[i] = min(dp[i], dp[i-coin]+1) if i>=coin and dp[i-coin]!=INT_MAX. O(amount·coins) time O(amount) space.",
+followups:["Coin Change 2 (LC 518) — count number of ways","Perfect Squares (LC 279) — same template, coins are perfect squares","Minimum Cost For Tickets (LC 983)","Jump Game VI (LC 1696)"],
+similar:["Coin Change 2","Perfect Squares","Minimum Cost for Tickets"],
+notes:"Initialize with amount+1 (not INT_MAX) to avoid overflow on +1. Final answer: dp[amount] > amount → -1 (impossible). Unbounded knapsack family — each coin can be reused. Top-down memoization is equally valid.",date:"2026-03-14"},
+
+{id:"l32",name:"Longest Increasing Subsequence",lcNum:"300",diff:"medium",pattern:"Dynamic Programming",alts:["Binary Search (Patience Sorting — O(n log n))"],
+approach:"O(n²) DP: dp[i] = length of LIS ending at index i. For each i, dp[i] = max(dp[j]+1) for all j<i where nums[j]<nums[i]. Answer is max(dp). O(n log n) alternative: maintain tails array, binary search for insertion position of each element.",
+followups:["Longest Common Subsequence (LC 1143)","Russian Doll Envelopes (LC 354) — 2D LIS","Number of LIS (LC 673)","Minimum Number of Increasing Subsequences"],
+similar:["Russian Doll Envelopes","Number of Longest Increasing Subsequences","Longest Common Subsequence"],
+notes:"O(n log n) patience sorting: tails[i] = smallest tail of all increasing subsequences of length i+1. Binary search for position to insert/replace. This doesn't give the actual subsequence easily — mention this limitation.",date:"2026-03-14"},
+
+{id:"l33",name:"Longest Common Subsequence",lcNum:"1143",diff:"medium",pattern:"Dynamic Programming",alts:["Memoization (top-down)"],
+approach:"2D DP. dp[i][j] = LCS length of s1[0..i-1] and s2[0..j-1]. If s1[i-1]==s2[j-1]: dp[i][j] = dp[i-1][j-1]+1. Else: dp[i][j] = max(dp[i-1][j], dp[i][j-1]). O(m·n) time O(m·n) space (optimizable to O(min(m,n))).",
+followups:["Edit Distance (LC 72) — related 2D DP","Shortest Common Supersequence (LC 1092)","Delete Operation for Two Strings (LC 583)","Minimum ASCII Delete Sum (LC 712)"],
+similar:["Edit Distance","Shortest Common Supersequence","Delete Operation for Two Strings"],
+notes:"LCS is the base for Edit Distance (substitution adds +1 to non-match case). Space optimization: only need previous row → O(n) space. Can reconstruct actual subsequence by backtracking through dp table.",date:"2026-03-14"},
+
+{id:"l34",name:"Edit Distance",lcNum:"72",diff:"hard",pattern:"Dynamic Programming",alts:["Memoization (top-down)"],
+approach:"2D DP. dp[i][j] = min operations to convert word1[0..i-1] to word2[0..j-1]. Base: dp[i][0]=i, dp[0][j]=j. If chars match: dp[i][j]=dp[i-1][j-1]. Else: dp[i][j] = 1 + min(dp[i-1][j] (delete), dp[i][j-1] (insert), dp[i-1][j-1] (replace)). O(m·n) time and space.",
+followups:["Minimum ASCII Delete Sum (LC 712)","One Edit Distance (LC 161)","Longest Common Subsequence (LC 1143) — foundation","Uncrossed Lines (LC 1035)"],
+similar:["Longest Common Subsequence","One Edit Distance","Minimum ASCII Delete Sum"],
+notes:"Three operations map to three neighbors in DP table: dp[i-1][j]=delete from word1, dp[i][j-1]=insert into word1, dp[i-1][j-1]=replace. When chars match, replace is free (dp[i-1][j-1]). Classic hard 2D DP.",date:"2026-03-14"},
+
+{id:"l35",name:"Partition Equal Subset Sum",lcNum:"416",diff:"medium",pattern:"Dynamic Programming",alts:["DFS + Memoization","Bitset optimization"],
+approach:"0/1 Knapsack. Target = totalSum/2 (if odd → false). dp[j] = true if subset summing to j exists. Process each number: iterate j from target down to num, set dp[j] |= dp[j-num]. O(n·target) time O(target) space.",
+followups:["Target Sum (LC 494) — count ways","Last Stone Weight II (LC 1049) — minimize diff","Ones and Zeroes (LC 474) — 2D knapsack","Subset Sum Count"],
+similar:["Target Sum","Last Stone Weight II","Coin Change 2"],
+notes:"Must iterate j backwards (target → num) to prevent using the same element twice. BitSet optimization: represent dp as a bitmask, dp |= dp << num — very fast in practice. If totalSum is odd → immediately false.",date:"2026-03-14"},
+
+/* ── BACKTRACKING ── */
+{id:"l36",name:"Subsets",lcNum:"78",diff:"medium",pattern:"DFS / Backtracking",alts:["Bit Manipulation","Iterative"],
+approach:"Backtracking: for each position i from start to n-1, add nums[i] to current subset, recurse from i+1, then remove (backtrack). Add a copy of current to result at each call (not just at leaf). O(2^n · n) time O(n) space for recursion.",
+followups:["Subsets II (LC 90) — with duplicates (sort + skip dups)","Permutations (LC 46)","Combination Sum (LC 39)","Letter Combinations of a Phone Number (LC 17)"],
+similar:["Subsets II","Permutations","Combination Sum"],
+notes:"Bit manipulation alternative: for each mask 0 to 2^n-1, bit i set means include nums[i]. O(2^n·n) but iterative. For Subsets II (with dups): sort first, then if(i>start && nums[i]==nums[i-1]) continue.",date:"2026-03-14"},
+
+{id:"l37",name:"Permutations",lcNum:"46",diff:"medium",pattern:"DFS / Backtracking",alts:["Iterative (insert each element at all positions)"],
+approach:"Backtracking with a boolean used[] array. At each level try all unused elements. Mark used[i]=true, add to current, recurse, unmark, remove. When current.Count==nums.Length, add copy to result. O(n!·n) time O(n) space.",
+followups:["Permutations II (LC 47) — with duplicates","Next Permutation (LC 31)","Permutation Sequence (LC 60)","Letter Case Permutation (LC 784)"],
+similar:["Permutations II","Next Permutation","Subsets"],
+notes:"For Permutations II (dups): sort first, add condition if(i>0 && nums[i]==nums[i-1] && !used[i-1]) continue. The !used[i-1] ensures we only use each duplicate at one position in a level.",date:"2026-03-14"},
+
+{id:"l38",name:"Combination Sum",lcNum:"39",diff:"medium",pattern:"DFS / Backtracking",alts:["DP (count ways)"],
+approach:"Backtracking. Sort candidates. For each starting index i, add candidates[i] to current, recurse from i (same index, reuse allowed), subtract from remaining. If remaining==0 → found combination. If candidates[i]>remaining → prune (break since sorted). O(n^(target/min)) time.",
+followups:["Combination Sum II (LC 40) — no reuse, skip dups","Combination Sum III (LC 216) — exactly k numbers","Combination Sum IV (LC 377) — order matters, DP","Letter Combinations of Phone Number (LC 17)"],
+similar:["Combination Sum II","Coin Change","Subsets"],
+notes:"Sort enables pruning: if candidates[i] > remaining, break the loop (all subsequent candidates also too large). Reuse allowed → pass i not i+1 to recursive call. For LC 40 (no reuse): pass i+1, skip dups with if(i>start && candidates[i]==candidates[i-1]).",date:"2026-03-14"},
+
+{id:"l39",name:"N-Queens",lcNum:"51",diff:"hard",pattern:"DFS / Backtracking",alts:["Bit Manipulation (ultra-optimized)"],
+approach:"Place one queen per row. For each column in current row, check if it's safe (not attacked by any placed queen). Track attacked columns, diagonals (row-col), and anti-diagonals (row+col) in HashSets. Place, recurse to next row, remove. O(n!) time O(n) space.",
+followups:["N-Queens II (LC 52) — count solutions only","Sudoku Solver (LC 37)","Valid Sudoku (LC 36)","Place N Rooks on chessboard"],
+similar:["N-Queens II","Sudoku Solver","Permutations"],
+notes:"Three attack sets needed: cols, diagonals (r-c, constant along diagonal), anti-diagonals (r+c, constant along anti-diagonal). Board reconstruction: for each row, place 'Q' at the stored column and '.' elsewhere.",date:"2026-03-14"},
+
+{id:"l40",name:"Sudoku Solver",lcNum:"37",diff:"hard",pattern:"DFS / Backtracking",alts:["Constraint Propagation"],
+approach:"Backtracking on empty cells. For each empty cell, try digits 1-9. Check if valid (not in same row, col, 3×3 box). If valid, place and recurse to next empty cell. If recursion returns false, backtrack (set back to '.'). O(9^(empty cells)) time O(1) extra space.",
+followups:["Valid Sudoku (LC 36) — just validate, no solve","N-Queens (LC 51)","Word Search (LC 79)","Generate Parentheses (LC 22)"],
+similar:["N-Queens","Valid Sudoku","Word Search"],
+notes:"Box index = (row/3)*3 + col/3. Precompute which cells are empty and which are pre-filled once. Advanced: constraint propagation (arc consistency) dramatically prunes search space — mention as optimization.",date:"2026-03-14"},
+
+/* ── HEAP ── */
+{id:"l41",name:"Kth Largest Element in an Array",lcNum:"215",diff:"medium",pattern:"Heap / Priority Queue",alts:["QuickSelect O(n) average","Sorting O(n log n)"],
+approach:"Min-heap of size k. Iterate array: push each element, pop if size > k. Top of heap = kth largest. O(n log k) time O(k) space. QuickSelect alternative: O(n) average, O(n²) worst — mention in interview.",
+followups:["Top K Frequent Elements (LC 347)","K Closest Points to Origin (LC 973)","Kth Smallest in Sorted Matrix (LC 378)","Find K Pairs with Smallest Sums (LC 373)"],
+similar:["Top K Frequent Elements","K Closest Points to Origin","Find Median from Data Stream"],
+notes:"In C#: PriorityQueue<int,int> — lower priority = dequeued first (min-heap). Heap keeps k largest because it continuously evicts the minimum. QuickSelect is faster on average but non-deterministic worst case.",date:"2026-03-14"},
+
+{id:"l42",name:"Top K Frequent Elements",lcNum:"347",diff:"medium",pattern:"Heap / Priority Queue",alts:["Bucket Sort O(n)"],
+approach:"Build frequency map O(n). Use min-heap of size k on (count, num) pairs. O(n log k) time O(n+k) space. Bucket sort alternative: create buckets indexed by frequency (1 to n), fill, iterate in reverse — O(n) time, O(n) space.",
+followups:["Top K Frequent Words (LC 692) — alphabetical tiebreak","Sort Characters by Frequency (LC 451)","Kth Largest Element (LC 215)","Find K Closest Elements (LC 658)"],
+similar:["Kth Largest Element","Sort Characters By Frequency","K Closest Points to Origin"],
+notes:"Bucket sort is O(n) — often the expected solution at Google. Key: bucket[freq].Add(num) then iterate buckets from n down to 1. In C#: heap priority is the count, Enqueue(num, count), pop when size>k.",date:"2026-03-14"},
+
+{id:"l43",name:"Merge K Sorted Lists",lcNum:"23",diff:"hard",pattern:"Heap / Priority Queue",alts:["Divide and Conquer O(n log k)"],
+approach:"Min-heap initialized with the head of each list (O(k log k)). Repeatedly extract min node, add to result, push its .next if exists. O(n log k) time O(k) space where n=total nodes, k=number of lists. Divide and conquer: merge lists pairwise, O(n log k) but O(log k) space.",
+followups:["Merge Two Sorted Lists (LC 21) — base case","Find K Pairs with Smallest Sums (LC 373)","Kth Smallest in Sorted Matrix (LC 378)","Merge K Sorted Arrays"],
+similar:["Merge Two Sorted Lists","Find K Pairs with Smallest Sums","Kth Smallest in Sorted Matrix"],
+notes:"In C#, PriorityQueue doesn't handle ties stably. Compare by val only; if ties exist add a list-index tiebreaker. Divide and conquer avoids heap entirely — elegant recursion: mergeKLists = merge(mergeKLists(first half), mergeKLists(second half)).",date:"2026-03-14"},
+
+{id:"l44",name:"Find Median from Data Stream",lcNum:"295",diff:"hard",pattern:"Heap / Priority Queue",alts:["Sorted List (O(n) insert)","Order Statistics Tree"],
+approach:"Two heaps: maxHeap for lower half (negate for C# min-heap), minHeap for upper half. Maintain size balance: |maxHeap.Count - minHeap.Count| <= 1. Median = top of larger heap or average of both tops. Add: always add to maxHeap first, then rebalance. O(log n) add, O(1) median.",
+followups:["Sliding Window Median (LC 480) — harder variant with removal","IPO (LC 502) — two heaps for greedy","Kth Largest in Stream (LC 703)","Find Right Interval (LC 436)"],
+similar:["Sliding Window Median","Kth Largest Element in a Stream","IPO"],
+notes:"Always insert into maxHeap first then conditionally move to minHeap (to handle the case where new element belongs in upper half). In C#: negate values for maxHeap simulation. Invariant: maxHeap.Count >= minHeap.Count.",date:"2026-03-14"},
+
+{id:"l45",name:"Task Scheduler",lcNum:"621",diff:"medium",pattern:"Heap / Priority Queue",alts:["Math Formula O(n)"],
+approach:"Max-heap of task frequencies. Each CPU cycle: extract up to n+1 distinct tasks (or idle if not enough). Reduce their counts. Re-add non-zero counts. Track time. O(n log n) but since only 26 task types: O(n). Math formula: intervals = (maxFreq-1)*(n+1) + countOfMaxFreq. Answer = max(intervals, total tasks).",
+followups:["Reorganize String (LC 767) — similar greedy placement","Minimum Number of CPU Cycles (variant)","IPO (LC 502)","Largest Number After Digit Swaps (LC 2231)"],
+similar:["Reorganize String","IPO","Find Median from Data Stream"],
+notes:"Math formula is O(n) and elegant — know both approaches. Formula: maxFreq tasks need (maxFreq-1) gaps of size n, plus the final group. If many high-frequency tasks, answer is just total task count (no idles needed).",date:"2026-03-14"},
+
+/* ── UNION FIND ── */
+{id:"l46",name:"Number of Provinces",lcNum:"547",diff:"medium",pattern:"Union Find",alts:["DFS","BFS"],
+approach:"Union-Find (DSU) with path compression and union by rank. For each pair (i,j) where isConnected[i][j]==1, union i and j. Count remaining components = number of Find() root representatives. O(n² · α(n)) ≈ O(n²) time O(n) space.",
+followups:["Number of Islands (LC 200)","Friend Circles (same as LC 547)","Accounts Merge (LC 721)","Number of Connected Components in Undirected Graph (LC 323)"],
+similar:["Number of Islands","Accounts Merge","Redundant Connection"],
+notes:"Path compression: parent[x] = Find(parent[x]) makes subsequent Finds near O(1). Union by rank prevents tree from degenerating. Components counter: initialize to n, decrement on each successful union (px != py).",date:"2026-03-14"},
+
+{id:"l47",name:"Redundant Connection",lcNum:"684",diff:"medium",pattern:"Union Find",alts:["DFS cycle detection"],
+approach:"Process edges one by one. For each edge (u,v): if Find(u)==Find(v) → adding this edge creates a cycle → it's the redundant connection, return it. Else Union(u,v). O(n · α(n)) time O(n) space. The last such edge in the array is the answer.",
+followups:["Redundant Connection II (LC 685) — directed graph variant","Number of Provinces (LC 547)","Graph Valid Tree (LC 261)","Making a Large Island (LC 827)"],
+similar:["Number of Provinces","Graph Valid Tree","Accounts Merge"],
+notes:"Greedy: process edges in order, first cycle-creating edge is the answer. This works because the problem guarantees exactly one redundant edge. Directed version (LC 685) is much harder — check for nodes with in-degree 2.",date:"2026-03-14"},
+
+{id:"l48",name:"Accounts Merge",lcNum:"721",diff:"medium",pattern:"Union Find",alts:["DFS on email graph"],
+approach:"Build email→account index map. Union-Find on account indices: for each account, union all its emails' account indices together. Group accounts by root. Collect emails per group, sort each group, prepend the account name. O(n·k·α) time where k=avg emails per account.",
+followups:["Number of Provinces (LC 547)","Redundant Connection (LC 684)","Sentence Similarity II (LC 737)","Similar String Groups (LC 839)"],
+similar:["Number of Provinces","Redundant Connection","Similar String Groups"],
+notes:"Email is the key — map email to its first-seen account index. DFS approach: build email→list of account indices adjacency, then DFS to find connected accounts. DFS is more straightforward but Union-Find handles dynamic merges better.",date:"2026-03-14"},
+
+{id:"l49",name:"Friend Circles / Number of Provinces",lcNum:"547",diff:"medium",pattern:"Union Find",alts:["DFS","BFS"],
+approach:"Same as Number of Provinces (LC 547). Treat isConnected matrix as adjacency. Union all pairs with isConnected[i][j]==1. Count distinct roots. DFS alternative: mark visited nodes, count DFS calls. Both O(n²) since we must check all pairs.",
+followups:["Accounts Merge (LC 721)","Number of Islands (LC 200)","Making a Large Island (LC 827)","Smallest String With Swaps (LC 1202)"],
+similar:["Number of Islands","Accounts Merge","Redundant Connection"],
+notes:"This is literally the same problem as Number of Provinces renamed. Union-Find shines here vs DFS because the adjacency is given as a matrix — no need to build an explicit edge list.",date:"2026-03-14"},
+
+/* ── MONOTONIC STACK ── */
+{id:"l50",name:"Daily Temperatures",lcNum:"739",diff:"medium",pattern:"Monotonic Stack",alts:["Brute Force O(n²)"],
+approach:"Monotonic decreasing stack (stores indices). For each temp i: while stack not empty and temps[i] > temps[stack.Peek()], pop index j and set result[j] = i - j (days to wait). Push i. O(n) time O(n) space. Each element pushed and popped at most once.",
+followups:["Next Greater Element I (LC 496)","Next Greater Element II (LC 503) — circular array","Online Stock Span (LC 901)","Sum of Subarray Minimums (LC 907)"],
+similar:["Next Greater Element I","Online Stock Span","Largest Rectangle in Histogram"],
+notes:"Key invariant: stack always stores indices of temps in decreasing order. Current temp is the 'next greater' for all popped elements. Circular variant (LC 503): iterate 0..2n-1 with index % n.",date:"2026-03-14"},
+
+{id:"l51",name:"Next Greater Element",lcNum:"496",diff:"easy",pattern:"Monotonic Stack",alts:["Brute Force O(n²)"],
+approach:"Build next-greater map for nums2 using monotonic stack (same as Daily Temperatures). Then answer queries from nums1 using the map. O(m+n) time O(n) space where n=nums2 length, m=nums1 length.",
+followups:["Next Greater Element II (LC 503) — circular","Daily Temperatures (LC 739)","Next Greater Node in Linked List (LC 1019)","Final Prices With a Special Discount (LC 1475)"],
+similar:["Daily Temperatures","Next Greater Element II","Online Stock Span"],
+notes:"Two-step: first build the NGE map for nums2 in O(n), then look up each nums1 element in O(1). Default answer is -1 (no greater element to the right). The map approach decouples the two arrays cleanly.",date:"2026-03-14"},
+
+{id:"l52",name:"Largest Rectangle in Histogram",lcNum:"84",diff:"hard",pattern:"Monotonic Stack",alts:["Divide and Conquer O(n log n)"],
+approach:"Monotonic increasing stack (stores indices). For each bar i: while stack not empty and heights[stack.Peek()] > heights[i], pop height h, compute width = stack empty ? i : i - stack.Peek() - 1. Area = h * width. Push sentinel 0 at end. O(n) time O(n) space.",
+followups:["Maximal Rectangle (LC 85) — apply histogram to each row of matrix","Largest Rectangle in a Histogram variant (with gaps)","Trapping Rain Water (LC 42) — similar stack logic","Maximum Width Ramp (LC 962)"],
+similar:["Maximal Rectangle","Trapping Rain Water","Sum of Subarray Minimums"],
+notes:"Sentinel 0 at the end forces all remaining bars to be popped. Width formula when popping index i: if stack empty → width = current index, else width = current - stack.Peek() - 1. This is one of the hardest monotonic stack problems — draw it out first.",date:"2026-03-14"},
+
+{id:"l53",name:"Trapping Rain Water (Stack)",lcNum:"42",diff:"hard",pattern:"Monotonic Stack",alts:["Two Pointers O(1) space","Prefix/Suffix Max Arrays"],
+approach:"Monotonic stack approach: maintain decreasing stack of indices. When current height > stack top, the top can trap water. Pop top as 'bottom', compute width between new top and current, height = min(heights[new top], heights[current]) - heights[bottom]. O(n) time O(n) space.",
+followups:["Container With Most Water (LC 11)","Largest Rectangle in Histogram (LC 84)","Trapping Rain Water II (LC 407) — 3D version","Rain Water Trapped in Valleys"],
+similar:["Container With Most Water","Largest Rectangle in Histogram","Daily Temperatures"],
+notes:"Two-pointer approach is preferred for O(1) space. Monotonic stack is useful for understanding the horizontal water-level concept. Both O(n) time. See Two Pointers section for the space-optimal approach.",date:"2026-03-14"},
+
+{id:"l54",name:"Remove K Digits",lcNum:"402",diff:"medium",pattern:"Monotonic Stack",alts:["Greedy"],
+approach:"Monotonic increasing stack. For each digit, while stack not empty and top > current and k > 0: pop (remove a larger digit), decrement k. Push current digit. After iteration if k > 0, remove from end. Build string from stack, strip leading zeros. O(n) time O(n) space.",
+followups:["Remove Duplicate Letters (LC 316) — similar greedy stack","Largest Number After Digit Swaps (LC 2231)","Create Maximum Number (LC 321)","Smallest Subsequence of Distinct Characters (LC 1081)"],
+similar:["Remove Duplicate Letters","Monotone Increasing Digits","Create Maximum Number"],
+notes:"Greedy insight: to minimize number, remove larger digits that appear before smaller ones. Increasing stack ensures we keep the smallest possible digits at each position. Edge case: result is all zeros → return '0'.",date:"2026-03-14"},
+
+/* ── PREFIX SUM ── */
+{id:"l55",name:"Subarray Sum Equals K",lcNum:"560",diff:"medium",pattern:"Prefix Sum",alts:["Sliding Window (only for non-negative)"],
+approach:"Running prefix sum + HashMap of prefix sum counts. At each index check if (currentSum - k) exists in map — if so, those many subarrays end here with sum k. Add currentSum to map. Initialize map with {0:1} for subarrays starting at index 0. O(n) time O(n) space.",
+followups:["Continuous Subarray Sum (LC 523) — sum divisible by k","Subarray Sums Divisible by K (LC 974)","Path Sum III (LC 437) — tree version","Count of Range Sum (LC 327)"],
+similar:["Continuous Subarray Sum","Subarray Sums Divisible by K","Path Sum III"],
+notes:"Cannot use sliding window because array may contain negatives. Initialize map {0:1} BEFORE the loop. Look up (sum-k) BEFORE adding sum to map to handle single-element subarrays correctly.",date:"2026-03-14"},
+
+{id:"l56",name:"Range Sum Query – Immutable",lcNum:"303",diff:"easy",pattern:"Prefix Sum",alts:["Segment Tree (for mutable)"],
+approach:"Precompute prefix[i] = sum of nums[0..i-1] (1-indexed). Query(l,r) = prefix[r+1] - prefix[l]. O(n) build time, O(1) per query, O(n) space. For mutable array, use Fenwick Tree (BIT) or Segment Tree for O(log n) update and query.",
+followups:["Range Sum Query 2D Immutable (LC 304) — 2D prefix sum","Range Sum Query Mutable (LC 307) — Fenwick Tree","Subarray Sum Equals K (LC 560)","Count of Range Sum (LC 327)"],
+similar:["Range Sum Query 2D","Subarray Sum Equals K","Continuous Subarray Sum"],
+notes:"1-indexed prefix makes the formula clean: range[l,r] = prefix[r+1] - prefix[l]. 0-indexed: prefix[i] = sum of first i elements, range[l,r] = prefix[r+1] - prefix[l]. This is the foundational prefix sum problem.",date:"2026-03-14"},
+
+{id:"l57",name:"Product of Array Except Self",lcNum:"238",diff:"medium",pattern:"Prefix Sum",alts:["Division (not allowed — handle zeros)"],
+approach:"Two-pass approach without division. Forward pass: result[i] = product of all elements to the left. Backward pass: multiply result[i] by product of all elements to the right (track running right product). O(n) time O(1) extra space (output array doesn't count).",
+followups:["Subarray Sum Equals K (LC 560)","Maximum Product Subarray (LC 152)","Minimum Difference in Array (construct variant)","Trapping Rain Water (LC 42) — similar two-pass idea"],
+similar:["Maximum Product Subarray","Subarray Sum Equals K","Running Sum of 1d Array"],
+notes:"The trick: left products are built forward into result[], right products are applied backward with a running variable. Division approach fails when zeros exist. No extra array needed for the right pass — just a running multiplier.",date:"2026-03-14"},
+
+{id:"l58",name:"Continuous Subarray Sum",lcNum:"523",diff:"medium",pattern:"Prefix Sum",alts:["Brute Force O(n²)"],
+approach:"Prefix sum mod k. If two prefix sums have the same mod, the subarray between them is divisible by k. Store {remainder: first_seen_index} in map. Initialize {0: -1}. If (currentSum % k) seen at index j, and i - j >= 2 → valid. O(n) time O(k) space.",
+followups:["Subarray Sum Equals K (LC 560)","Subarray Sums Divisible by K (LC 974)","Check if Array Pairs Are Divisible by k (LC 1497)","Make Sum Divisible by P (LC 1590)"],
+similar:["Subarray Sum Equals K","Subarray Sums Divisible by K","Minimum Size Subarray Sum"],
+notes:"Initialize map with {0: -1} (empty subarray starting before index 0). Minimum length is 2: i - j >= 2. Handle k==0 edge case separately (look for prefix sum == 0). Python: use positive modulo (sum % k + k) % k for negative sums.",date:"2026-03-14"},
+
+{id:"l59",name:"Path Sum III",lcNum:"437",diff:"medium",pattern:"Prefix Sum",alts:["Brute Force DFS O(n²)"],
+approach:"DFS + prefix sum HashMap (same idea as Subarray Sum Equals K but on a tree). Pass current running sum down DFS. At each node check if (currentSum - targetSum) exists in the prefix map. Add currentSum to map before recursing, remove (decrement) after — this is the backtrack step. O(n) time O(h) space.",
+followups:["Subarray Sum Equals K (LC 560) — same algorithm on array","Path Sum (LC 112) — simpler, just root-to-leaf","Path Sum II (LC 113) — collect actual paths","Longest ZigZag Path in Binary Tree (LC 1372)"],
+similar:["Subarray Sum Equals K","Path Sum","Path Sum II"],
+notes:"Backtracking the prefix map is critical — without it, paths from other branches would contaminate the count. This is the tree equivalent of sliding window/prefix sum on arrays.",date:"2026-03-14"},
+
+/* ── TRIE ── */
+{id:"l60",name:"Implement Trie (Prefix Tree)",lcNum:"208",diff:"medium",pattern:"Tries (Prefix Trees)",alts:["Dictionary<string,bool>"],
+approach:"TrieNode has Dictionary<char,TrieNode> children and bool IsEnd. Insert: traverse/create nodes for each char, mark last as IsEnd. Search: traverse, return IsEnd at last char. StartsWith: traverse, return true if path exists. All O(L) where L=word length.",
+followups:["Design Add and Search Words Data Structure (LC 211)","Word Search II (LC 212)","Replace Words (LC 648)","Maximum XOR of Two Numbers in Array (LC 421)"],
+similar:["Design Add and Search Words","Word Search II","Replace Words"],
+notes:"Array[26] children is faster than Dictionary when only lowercase letters. Dictionary is more general. IsEnd flag is crucial — 'app' and 'apple' share nodes but 'app'.IsEnd = true, 'apple'.IsEnd = true independently.",date:"2026-03-14"},
+
+{id:"l61",name:"Word Search II",lcNum:"212",diff:"hard",pattern:"Tries (Prefix Trees)",alts:["DFS with Set lookup O(m·n·4^L per word)"],
+approach:"Build Trie from word list. DFS from each cell, traversing the Trie simultaneously. If current char not in trie node's children → prune. If node.IsEnd → found a word, add to result. Mark cell visited, recurse 4 directions, unmark. O(m·n·4^L) but Trie pruning makes it much faster in practice.",
+followups:["Word Search (LC 79) — single word, no Trie needed","Implement Trie (LC 208) — foundation","Design Add and Search Words (LC 211)","Boggle Game"],
+similar:["Implement Trie","Word Search","Design Add and Search Words"],
+notes:"Optimization: after finding a word, set node.IsEnd=false (or node.word=null) to avoid adding duplicates. Further optimization: prune trie nodes with no children remaining (bottom-up cleanup). Without Trie, each word requires a separate DFS — O(words * m*n*4^L).",date:"2026-03-14"},
+
+{id:"l62",name:"Design Add and Search Words",lcNum:"211",diff:"medium",pattern:"Tries (Prefix Trees)",alts:["Regex matching"],
+approach:"Trie with wildcard support. Insert is standard. Search: if current char is '.', recurse into ALL children. If specific char, recurse into that child only. O(L) for insert, O(26^dots · L) worst case for search with wildcards.",
+followups:["Implement Trie (LC 208) — foundation","Word Search II (LC 212)","Replace Words (LC 648)","Prefix and Suffix Search (LC 745)"],
+similar:["Implement Trie","Word Search II","Replace Words"],
+notes:"The '.' wildcard makes DFS necessary — you can't take a direct path. Handle edge case: if node is null → return false. The DFS branching on '.' is what makes the worst case exponential — mention O(26^wildcards) to interviewer.",date:"2026-03-14"},
+
+{id:"l63",name:"Replace Words",lcNum:"648",diff:"medium",pattern:"Tries (Prefix Trees)",alts:["Sort by length + HashSet"],
+approach:"Build Trie from root dictionary. For each word in sentence, traverse Trie char by char. If node.IsEnd → replace word with root found so far. If traversal ends without finding a root → keep original word. O(sum of root lengths + sentence length) time.",
+followups:["Implement Trie (LC 208)","Longest Word in Dictionary (LC 720)","Word Break (LC 139) — DP with Trie","Design Add and Search Words (LC 211)"],
+similar:["Implement Trie","Longest Word in Dictionary","Word Break"],
+notes:"Simpler alternative: sort roots by length, use HashSet for O(1) lookup, for each word try all prefixes of increasing length — O(L²) per word. Trie is faster O(L) per word lookup.",date:"2026-03-14"},
+
+{id:"l64",name:"Maximum XOR of Two Numbers in an Array",lcNum:"421",diff:"medium",pattern:"Tries (Prefix Trees)",alts:["Brute Force O(n²)"],
+approach:"Binary Trie storing 32-bit numbers MSB to LSB. For each number, traverse trie greedily: try the opposite bit first (to maximize XOR). If opposite bit path exists → take it (contributes 1 to result). Else take same bit path. O(32n) = O(n) time O(32n) = O(n) space.",
+followups:["Maximum XOR with an Element from Array (LC 1707)","Find Maximum XOR Sum of Array (variant)","Count Pairs with XOR in Range (LC 1803)"],
+similar:["Implement Trie","Maximum XOR With an Element From Array"],
+notes:"Binary Trie: each node has only two children (0 and 1). Insert each number bit by bit from MSB. Query: greedily pick the bit that maximizes XOR (prefer opposite bit). This is the signature 'XOR optimization' Trie technique.",date:"2026-03-14"},
+
+/* ── TOPOLOGICAL SORT ── */
+{id:"l65",name:"Course Schedule",lcNum:"207",diff:"medium",pattern:"Topological Sort",alts:["DFS cycle detection"],
+approach:"Kahn's algorithm (BFS + in-degree). Build adjacency list and in-degree array. Enqueue all nodes with in-degree 0. Process: dequeue node, reduce in-degree of its neighbors, enqueue those that reach 0. If processed count == n → no cycle → possible. O(V+E) time O(V+E) space.",
+followups:["Course Schedule II (LC 210) — return actual order","Alien Dictionary (LC 269) — build order from letter pairs","Sequence Reconstruction (LC 444)","Minimum Height Trees (LC 310)"],
+similar:["Course Schedule II","Alien Dictionary","Minimum Height Trees"],
+notes:"Kahn's vs DFS: Kahn's is iterative (no recursion stack), easier to implement correctly. DFS needs 3-state visited. Both O(V+E). For Course Schedule II: collect dequeued nodes as the order. processed.Count < n ↔ cycle detected.",date:"2026-03-14"},
+
+{id:"l66",name:"Course Schedule II",lcNum:"210",diff:"medium",pattern:"Topological Sort",alts:["DFS post-order reverse"],
+approach:"Kahn's algorithm (same as Course Schedule) but collect the dequeue order. That order is a valid topological sort = the course order to take. If cycle exists → return empty array. O(V+E) time O(V+E) space.",
+followups:["Course Schedule (LC 207) — simpler version","Alien Dictionary (LC 269)","Build a Matrix With Conditions (LC 2392)","Parallel Courses (LC 1136)"],
+similar:["Course Schedule","Alien Dictionary","Parallel Courses"],
+notes:"The dequeue order from Kahn's is directly the topological order. DFS alternative: post-order DFS, then reverse the result. DFS post-order gives reverse topological order. Both are equally valid — know both.",date:"2026-03-14"},
+
+{id:"l67",name:"Alien Dictionary",lcNum:"269",diff:"hard",pattern:"Topological Sort",alts:["DFS-based topo sort"],
+approach:"Build character ordering graph from adjacent words in word list. For each pair of adjacent words, find first differing char — that gives an ordering edge. Then run Kahn's (or DFS) topological sort on the character graph. If cycle exists or adjacent words have longer prefix first → invalid input. O(C) where C=total chars across all words.",
+followups:["Course Schedule (LC 207) — same Kahn's template","Course Schedule II (LC 210)","Sequence Reconstruction (LC 444)","Minimum Cost to Connect All Points via ordering"],
+similar:["Course Schedule","Course Schedule II","Sequence Reconstruction"],
+notes:"Edge case: if words[i] is a prefix of words[i-1] → return '' (invalid ordering). Build graph only from first differing char per adjacent pair — all remaining chars don't constrain ordering. Use a set for edges to avoid duplicates.",date:"2026-03-14"},
+
+{id:"l68",name:"Sequence Reconstruction",lcNum:"444",diff:"medium",pattern:"Topological Sort",alts:["Direct comparison"],
+approach:"Build ordering graph from all sequences. Run Kahn's. For the sequence to be the unique reconstruction: at every step the queue must have exactly 1 node (no ambiguity). If queue ever has 2+ nodes → multiple valid orderings exist. Final order must match org. O(V+E) time.",
+followups:["Course Schedule II (LC 210)","Alien Dictionary (LC 269)","Minimum Unique Graph Labeling","Topological Sort uniqueness check"],
+similar:["Course Schedule II","Alien Dictionary","Course Schedule"],
+notes:"The uniqueness condition is the key difference: queue size must be 1 at all times. If queue size > 1 → return false (multiple valid orderings). If final order != org → false. This tests deeper understanding of Kahn's beyond just detecting cycles.",date:"2026-03-14"},
+
+{id:"l69",name:"Build a Matrix With Conditions",lcNum:"2392",diff:"hard",pattern:"Topological Sort",alts:["DFS-based topo sort"],
+approach:"Run two independent topological sorts: one for row conditions, one for column conditions. Get row order → for each number record its row index. Get column order → record col index. Construct the k×k matrix placing each number at (rowPos[num], colPos[num]). If either topo sort detects a cycle → return empty. O(k + conditions) time.",
+followups:["Course Schedule II (LC 210)","Alien Dictionary (LC 269)","Strange Printer II (LC 1591)"],
+similar:["Course Schedule II","Alien Dictionary","Sequence Reconstruction"],
+notes:"Two completely independent Kahn's runs — one per dimension. The insight: row and column placement problems are independent. Cycle in either dimension → impossible. Clean separation of concerns makes this problem much simpler than it looks.",date:"2026-03-14"},
+];
+
+const [log,setLog]=useState(()=>{try{const s=localStorage.getItem("dsa_problem_log_v2");if(s)return JSON.parse(s);}catch{}return ALL_LOG_PROBLEMS;});
+const [logModal,setLogModal]=useState(false);
+const [editId,setEditId]=useState(null);
+const [delId,setDelId]=useState(null);
+const [logSearch,setLogSearch]=useState("");
+const [logFilterPat,setLogFilterPat]=useState("");
+const [logFilterDiff,setLogFilterDiff]=useState("");
+const [openCards,setOpenCards]=useState({});
+const [openSections,setOpenSections]=useState({});
+const [formData,setFormData]=useState({name:"",lcNum:"",diff:"medium",pattern:"Sliding Window",alts:[],approach:"",followups:"",similar:"",notes:""});
+
+const saveLog=(next)=>{setLog(next);try{localStorage.setItem("dsa_problem_log_v2",JSON.stringify(next));}catch{}};
+const toggleCard=(id)=>setOpenCards(p=>({...p,[id]:!p[id]}));
+const toggleSection=(key)=>setOpenSections(p=>({...p,[key]:!p[key]}));
+const openAdd=()=>{setEditId(null);setFormData({name:"",lcNum:"",diff:"medium",pattern:"Sliding Window",alts:[],approach:"",followups:"",similar:"",notes:""});setLogModal(true);};
+const openEdit=(e)=>{setEditId(e.id);setFormData({name:e.name,lcNum:e.lcNum||"",diff:e.diff,pattern:e.pattern,alts:e.alts||[],approach:e.approach||"",followups:(e.followups||[]).join("\n"),similar:(e.similar||[]).join("\n"),notes:e.notes||""});setLogModal(true);};
+const saveEntry=()=>{
+  if(!formData.name.trim())return;
+  const entry={id:editId||("p"+Date.now()),name:formData.name.trim(),lcNum:formData.lcNum.trim(),diff:formData.diff,pattern:formData.pattern,alts:formData.alts,approach:formData.approach.trim(),followups:formData.followups.split("\n").map(s=>s.trim()).filter(Boolean),similar:formData.similar.split("\n").map(s=>s.trim()).filter(Boolean),notes:formData.notes.trim(),date:editId?log.find(x=>x.id===editId)?.date:new Date().toISOString().slice(0,10)};
+  if(editId)saveLog(log.map(x=>x.id===editId?entry:x));
+  else saveLog([entry,...log]);
+  setLogModal(false);
+};
+const deleteEntry=(id)=>{saveLog(log.filter(x=>x.id!==id));setDelId(null);};
+const toggleAlt=(pat)=>setFormData(p=>({...p,alts:p.alts.includes(pat)?p.alts.filter(a=>a!==pat):[...p.alts,pat]}));
+const ALL_PATS=["Sliding Window","Two Pointers","Fast & Slow Pointers","Prefix Sum","Binary Search","BFS","DFS / Backtracking","Dynamic Programming","Greedy","Heap / Priority Queue","Union Find","Trie","Monotonic Stack","Intervals","Graph","Hash Map","Other"];
+const DIFF_COLORS={easy:{c:"#56D364",bg:"#56D36420",b:"#56D36450"},medium:{c:"#FFD700",bg:"#FFD70020",b:"#FFD70050"},hard:{c:"#FF7B72",bg:"#FF7B7220",b:"#FF7B7250"}};
+
+const save=(next)=>{setProg(next);try{localStorage.setItem("dsa_progress",JSON.stringify(next));}catch{}};
+const setStatus=(id,s)=>{const n={...prog};if(!s)delete n[id];else n[id]=s;save(n);};
+const cycle=(id,e)=>{e.stopPropagation();const c=prog[id];setStatus(id,!c?"inProgress":c==="inProgress"?"done":null);};
+const doneN=Object.values(prog).filter(v=>v==="done").length;
+const inPN=Object.values(prog).filter(v=>v==="inProgress").length;
+const filtered=P.filter(p=>p.name.toLowerCase().includes(search.toLowerCase())||p.problems.some(pr=>pr.toLowerCase().includes(search.toLowerCase())));
+
+const copy=(text)=>{try{navigator.clipboard.writeText(text);}catch{const t=document.createElement("textarea");t.value=text;document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);}setCopied(true);setTimeout(()=>setCopied(false),2000);};
+
+const answerQ=(opt)=>{const h=[...fhist,{qId:curQ,chosen:opt.l}];setFhist(h);if(opt.r){setFresult(opt.r);setFdone(true);}else if(opt.n)setCurQ(opt.n);};
+const resetF=()=>{setFhist([]);setCurQ("q1");setFresult(null);setFdone(false);};
+const goTo=(id)=>{const p=P.find(x=>x.id===id);if(p){setActive(p);setTab("identify");setView("patterns");}};
+const curQ_=QUESTIONS.find(q=>q.id===curQ);
+
+const hl=(line)=>line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+.replace(/(\/\/.*)/g,'<span style="color:#8B949E">$1</span>')
+.replace(/\b(int|string|bool|char|var|void|return|while|for|foreach|if|else|new|class|public|private|true|false|null|this|static)\b/g,'<span style="color:#FF7B72">$1</span>')
+.replace(/\b(\d+)\b/g,'<span style="color:#79C0FF">$1</span>')
+.replace(/\b(Math|Array|List|Dictionary|HashSet|Stack|Queue|PriorityQueue|Enumerable)\b/g,'<span style="color:#FFA657">$1</span>');
+
+const navs=[["patterns","📖 Patterns"],["cheatsheet","📊 Quick Ref"],["finder","🎯 Finder"],["approach","🧭 Approach"],["log","📝 Problem Log"]];
+
+return(
+<div style={{display:"flex",flexDirection:"column",height:"100vh",overflow:"hidden",background:"#0D1117",color:"#E6EDF3",fontFamily:"'JetBrains Mono','Fira Code',monospace"}}>
+
+{/* HEADER */}
+<div style={{background:"linear-gradient(135deg,#161B22,#0D1117)",borderBottom:"1px solid #21262D",padding:"12px 18px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8,flexShrink:0}}>
+  <div>
+    <div style={{fontSize:15,fontWeight:700,letterSpacing:2}}>⚡ DSA PATTERNS — C#</div>
+    <div style={{display:"flex",alignItems:"center",gap:8,marginTop:5}}>
+      <span style={{fontSize:10,color:"#8B949E"}}>14 patterns · Google L4</span>
+      <span style={{fontSize:10,color:"#56D364",background:"#56D36420",border:"1px solid #56D36450",borderRadius:3,padding:"1px 6px"}}>✅ {doneN}/14</span>
+      {inPN>0&&<span style={{fontSize:10,color:"#FFD700",background:"#FFD70020",border:"1px solid #FFD70050",borderRadius:3,padding:"1px 6px"}}>⏳ {inPN}</span>}
+    </div>
+    <div style={{width:200,height:3,background:"#21262D",borderRadius:2,marginTop:5}}>
+      <div style={{height:"100%",width:`${(doneN/14)*100}%`,background:"linear-gradient(90deg,#56D364,#2EA043)",borderRadius:2,transition:"width 0.4s"}}/>
+    </div>
+  </div>
+  <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+    {navs.map(([k,l])=>(
+      <button key={k} onClick={()=>setView(k)} style={{padding:"5px 11px",background:view===k?"#161B22":"transparent",border:view===k?"1px solid #30363D":"1px solid transparent",borderRadius:5,color:view===k?"#E6EDF3":"#8B949E",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>{l}</button>
+    ))}
+  </div>
+</div>
+
+{/* PATTERNS VIEW */}
+{view==="patterns"&&(
+<div style={{display:"flex",flex:1,overflow:"hidden"}}>
+  {/* Sidebar */}
+  <div style={{width:200,borderRight:"1px solid #21262D",overflowY:"auto",padding:"8px 6px",flexShrink:0}}>
+    <input placeholder="🔍 Search..." value={search} onChange={e=>setSearch(e.target.value)}
+      style={{width:"100%",background:"#161B22",border:"1px solid #21262D",borderRadius:5,padding:"6px 8px",color:"#E6EDF3",fontSize:11,fontFamily:"inherit",marginBottom:7,boxSizing:"border-box",outline:"none"}}/>
+    {filtered.map(p=>{
+      const st=prog[p.id];const sc=SC[st];
+      return(
+        <button key={p.id} onClick={()=>{setActive(p);setTab("identify");}}
+          style={{width:"100%",textAlign:"left",background:active.id===p.id?p.bg:"transparent",border:active.id===p.id?`1px solid ${p.border}`:"1px solid transparent",borderRadius:5,padding:"7px 7px",cursor:"pointer",marginBottom:2}}>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontSize:12}}>{p.emoji}</span>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:10,color:active.id===p.id?p.color:"#C9D1D9",fontWeight:active.id===p.id?700:400,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{p.name}</div>
+              <div style={{fontSize:9,color:"#8B949E",marginTop:1}}>{p.tc}</div>
+            </div>
+            <div onClick={e=>cycle(p.id,e)}
+              style={{width:17,height:17,borderRadius:3,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,flexShrink:0,background:sc?sc.bg:"#21262D",border:`1px solid ${sc?sc.border:"#30363D"}`,cursor:"pointer"}}>
+              {sc?sc.icon:<span style={{color:"#484F58",fontSize:8}}>○</span>}
+            </div>
+          </div>
+        </button>
+      );
+    })}
+  </div>
+
+  {/* Detail */}
+  <div style={{flex:1,overflowY:"auto",padding:18}}>
+    {/* Header card */}
+    <div style={{background:`linear-gradient(135deg,${active.bg},transparent)`,border:`1px solid ${active.border}`,borderRadius:10,padding:16,marginBottom:16}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:10}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:24}}>{active.emoji}</span>
+          <div>
+            <div style={{fontSize:17,fontWeight:700,color:active.color}}>{active.name}</div>
+            <div style={{fontSize:10,color:"#8B949E",marginTop:1}}>{active.rank}</div>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:7,alignItems:"center",flexWrap:"wrap"}}>
+          {[["⏱",active.tc],["💾",active.sc]].map(([icon,val])=>(
+            <div key={val} style={{background:"#161B22",border:"1px solid #30363D",borderRadius:6,padding:"6px 10px",textAlign:"center"}}>
+              <div style={{fontSize:8,color:"#8B949E",marginBottom:2}}>{icon}</div>
+              <div style={{fontSize:10,color:active.color,fontWeight:700}}>{val}</div>
+            </div>
+          ))}
+          {["inProgress","done"].map(s=>{
+            const sc=SC[s];const on=prog[active.id]===s;
+            return(
+              <button key={s} onClick={()=>setStatus(active.id,on?null:s)}
+                style={{background:on?sc.bg:"#161B22",border:`1px solid ${on?sc.border:"#30363D"}`,borderRadius:6,padding:"6px 10px",cursor:"pointer",color:on?sc.color:"#8B949E",fontSize:10,fontFamily:"inherit",fontWeight:on?700:400,display:"flex",alignItems:"center",gap:4}}>
+                {sc.icon} {sc.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+
+    {/* Tabs */}
+    <div style={{display:"flex",gap:2,borderBottom:"1px solid #21262D",marginBottom:16}}>
+      {[["identify","🔍 Identify"],["template","💻 C# Template"],["pairs","🔀 Pairs"],["problems","🎯 Problems"]].map(([k,l])=>(
+        <button key={k} onClick={()=>setTab(k)} style={{padding:"6px 12px",background:"transparent",border:"none",borderBottom:tab===k?`2px solid ${active.color}`:"2px solid transparent",color:tab===k?active.color:"#8B949E",cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:tab===k?700:400,marginBottom:-1}}>{l}</button>
+      ))}
+    </div>
+
+    {tab==="identify"&&(
+      <div>
+        <div style={{background:`${active.color}10`,border:`1px solid ${active.border}`,borderRadius:7,padding:12,marginBottom:14}}>
+          <div style={{fontSize:9,color:active.color,fontWeight:700,letterSpacing:1,marginBottom:5}}>WHEN TO USE</div>
+          <div style={{fontSize:12,color:"#C9D1D9",lineHeight:1.7}}>{active.whenToUse}</div>
+        </div>
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:9}}>🚦 IDENTIFICATION SIGNALS</div>
+          {active.identify.map((s,i)=>(
+            <div key={i} style={{display:"flex",gap:7,marginBottom:6}}>
+              <span style={{color:active.color,fontSize:11}}>▸</span>
+              <span style={{fontSize:11,color:"#C9D1D9"}}>{s}</span>
+            </div>
+          ))}
+        </div>
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:8}}>📦 VARIANTS</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+            {active.types.map((t,i)=><span key={i} style={{background:"#161B22",border:`1px solid ${active.border}`,color:active.color,padding:"3px 8px",borderRadius:4,fontSize:11}}>{t}</span>)}
+          </div>
+        </div>
+        <div style={{background:"#1C2128",border:"1px solid #30363D",borderRadius:7,padding:11}}>
+          <div style={{fontSize:9,color:"#F0883E",fontWeight:700,letterSpacing:1,marginBottom:5}}>💡 KEY TRICK</div>
+          <div style={{fontSize:11,color:"#C9D1D9",lineHeight:1.7}}>{active.trick}</div>
+        </div>
+      </div>
+    )}
+
+    {tab==="template"&&(
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"#161B22",borderRadius:"7px 7px 0 0",padding:"8px 12px",border:"1px solid #30363D",borderBottom:"none"}}>
+          <div style={{display:"flex",gap:5,alignItems:"center"}}>
+            {["#FF5F57","#FFBD2E","#28C940"].map((c,i)=><div key={i} style={{width:8,height:8,borderRadius:"50%",background:c}}/>)}
+            <span style={{fontSize:9,color:"#8B949E",marginLeft:5}}>{active.name} · C#</span>
+          </div>
+          <button onClick={()=>copy(active.template)} style={{background:copied?"#56D36420":"#21262D",border:`1px solid ${copied?"#56D364":"#30363D"}`,color:copied?"#56D364":"#8B949E",padding:"2px 8px",borderRadius:3,cursor:"pointer",fontSize:9,fontFamily:"inherit"}}>
+            {copied?"✓ Copied":"Copy"}
+          </button>
+        </div>
+        <pre style={{background:"#0D1117",border:"1px solid #30363D",borderRadius:"0 0 7px 7px",padding:14,overflowX:"auto",fontSize:11,lineHeight:1.7,color:"#C9D1D9",margin:0,whiteSpace:"pre"}}>
+          {active.template.split("\n").map((line,i)=>(
+            <div key={i} dangerouslySetInnerHTML={{__html:hl(line)}}/>
+          ))}
+        </pre>
+      </div>
+    )}
+
+    {tab==="pairs"&&(
+      <div>
+        <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:11}}>🔀 PAIRS WITH</div>
+        {active.pairs.map((pair,i)=>{
+          const rel=P.find(p=>p.name.toLowerCase().includes(pair.split(" ")[0].toLowerCase().replace(/[^a-z]/g,"")));
+          return(
+            <div key={i} onClick={()=>rel&&(setActive(rel),setTab("identify"))}
+              style={{background:"#161B22",border:"1px solid #21262D",borderRadius:7,padding:"11px 13px",marginBottom:7,cursor:rel?"pointer":"default"}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:13}}>{rel?.emoji||"🔧"}</span>
+                <div>
+                  <div style={{fontSize:12,color:rel?.color||"#58A6FF",fontWeight:600}}>{pair}</div>
+                  {rel&&<div style={{fontSize:9,color:"#8B949E",marginTop:1}}>Click to view →</div>}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div style={{background:"#1C2128",border:"1px solid #30363D",borderRadius:7,padding:11,marginTop:6}}>
+          <div style={{fontSize:9,color:"#FDCB6E",fontWeight:700,letterSpacing:1,marginBottom:5}}>⚡ COMBINATION INSIGHT</div>
+          <div style={{fontSize:11,color:"#C9D1D9",lineHeight:1.6}}>
+            <strong style={{color:active.color}}>{active.name}</strong> often pairs with <strong style={{color:"#FDCB6E"}}>{active.pairs[0]}</strong> for the most common Google L4 problems.
+          </div>
+        </div>
+      </div>
+    )}
+
+    {tab==="problems"&&(
+      <div>
+        <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:11}}>🎯 MUST-SOLVE PROBLEMS</div>
+        {active.problems.map((prob,i)=>(
+          <div key={i} style={{background:"#161B22",border:"1px solid #21262D",borderRadius:7,padding:"9px 13px",marginBottom:6,display:"flex",alignItems:"center",gap:9}}>
+            <span style={{width:20,height:20,borderRadius:"50%",background:`${active.color}20`,color:active.color,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:700,flexShrink:0}}>{i+1}</span>
+            <span style={{fontSize:12,color:"#C9D1D9"}}>{prob}</span>
+          </div>
+        ))}
+        <div style={{marginTop:14,background:`${active.color}10`,border:`1px solid ${active.border}`,borderRadius:7,padding:11}}>
+          <div style={{fontSize:9,color:active.color,fontWeight:700,letterSpacing:1,marginBottom:4}}>📝 STUDY ORDER</div>
+          <div style={{fontSize:11,color:"#C9D1D9",lineHeight:1.6}}>Solve in order. First 2–3 foundational. Last 1–2 are Google-hard variants combining patterns.</div>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
+)}
+
+{/* QUICK REF */}
+{view==="cheatsheet"&&(
+<div style={{flex:1,overflowY:"auto",padding:18}}>
+  <div style={{fontSize:10,color:"#8B949E",marginBottom:14}}>Signal → pattern mapping. Click any card to open pattern.</div>
+  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280px,1fr))",gap:7}}>
+    {CHEAT.map((row,i)=>{
+      const p=P.find(x=>x.name.includes(row.p.split(" ")[0]));
+      const sc=SC[prog[p?.id]];
+      return(
+        <div key={i} onClick={()=>{if(p){setActive(p);setTab("identify");setView("patterns");}}}
+          style={{background:"#161B22",border:`1px solid ${p?.border||"#21262D"}`,borderRadius:7,padding:"11px 13px",cursor:"pointer",position:"relative"}}>
+          {sc&&<span style={{position:"absolute",top:7,right:7,fontSize:11}}>{sc.icon}</span>}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:5}}>
+            <div style={{fontSize:12,color:p?.color||"#58A6FF",fontWeight:700}}>{p?.emoji} {row.p}</div>
+            <span style={{background:"#0D1117",border:"1px solid #30363D",borderRadius:3,padding:"1px 5px",fontSize:9,color:"#79C0FF",marginRight:sc?16:0}}>{row.t}</span>
+          </div>
+          <div style={{fontSize:10,color:"#8B949E",marginBottom:3}}>🚦 {row.s}</div>
+          <div style={{fontSize:10,color:"#C9D1D9"}}>✅ {row.b}</div>
+        </div>
+      );
+    })}
+  </div>
+</div>
+)}
+
+{/* FINDER */}
+{view==="finder"&&(
+<div style={{flex:1,overflowY:"auto",padding:18}}>
+  <div style={{maxWidth:620,margin:"0 auto"}}>
+    <div style={{marginBottom:18}}>
+      <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>🎯 Pattern Finder</div>
+      <div style={{fontSize:11,color:"#8B949E"}}>Answer questions to identify the best pattern for your problem.</div>
+    </div>
+    {fhist.length>0&&(
+      <div style={{marginBottom:14}}>
+        <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:7}}>YOUR ANSWERS</div>
+        {fhist.map((h,i)=>{
+          const q=QUESTIONS.find(x=>x.id===h.qId);
+          return(
+            <div key={i} style={{background:"#161B22",border:"1px solid #21262D",borderRadius:4,padding:"5px 11px",marginBottom:3,display:"flex",gap:7,alignItems:"center"}}>
+              <span style={{fontSize:9,color:"#8B949E",minWidth:12}}>Q{i+1}</span>
+              <span style={{fontSize:10,color:"#8B949E",flex:1}}>{q?.text}</span>
+              <span style={{fontSize:10,color:"#58A6FF",fontWeight:600,whiteSpace:"nowrap"}}>→ {h.chosen}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
+    {!fdone?(
+      <div style={{background:"#161B22",border:"1px solid #30363D",borderRadius:10,padding:20}}>
+        <div style={{fontSize:9,color:"#8B949E",marginBottom:9,letterSpacing:1}}>QUESTION {fhist.length+1}</div>
+        <div style={{fontSize:14,color:"#E6EDF3",fontWeight:600,marginBottom:18,lineHeight:1.5}}>{curQ_?.text}</div>
+        <div style={{display:"flex",flexDirection:"column",gap:7}}>
+          {curQ_?.opts.map((opt,i)=>(
+            <button key={i} onClick={()=>answerQ(opt)}
+              style={{textAlign:"left",background:"#0D1117",border:"1px solid #30363D",borderRadius:6,padding:"9px 13px",cursor:"pointer",color:"#C9D1D9",fontSize:12,fontFamily:"inherit"}}>
+              <span style={{color:"#58A6FF",marginRight:8}}>{String.fromCharCode(65+i)}.</span>{opt.l}
+            </button>
+          ))}
+        </div>
+        {fhist.length>0&&<button onClick={resetF} style={{marginTop:14,background:"transparent",border:"none",color:"#8B949E",cursor:"pointer",fontSize:10,fontFamily:"inherit"}}>↩ Start over</button>}
+      </div>
+    ):(
+      <div>
+        <div style={{background:"#0F2A1A",border:"1px solid #238636",borderRadius:10,padding:18,marginBottom:14}}>
+          <div style={{fontSize:11,color:"#56D364",fontWeight:700,marginBottom:12,letterSpacing:1}}>✅ RECOMMENDED PATTERN{fresult.length>1?"S":""}</div>
+          {fresult.map(id=>{
+            const p=P.find(x=>x.id===id);
+            return(
+              <div key={id} onClick={()=>goTo(id)}
+                style={{background:p.bg,border:`1px solid ${p.border}`,borderRadius:9,padding:15,cursor:"pointer",marginBottom:9}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:9}}>
+                    <span style={{fontSize:20}}>{p.emoji}</span>
+                    <div>
+                      <div style={{fontSize:13,color:p.color,fontWeight:700}}>{p.name}</div>
+                      <div style={{fontSize:9,color:"#8B949E",marginTop:2}}>{p.tc} · {p.rank}</div>
+                    </div>
+                  </div>
+                  <span style={{fontSize:9,color:p.color,border:`1px solid ${p.border}`,borderRadius:4,padding:"2px 7px"}}>View →</span>
+                </div>
+                <div style={{marginTop:10,fontSize:11,color:"#C9D1D9",lineHeight:1.6,borderTop:`1px solid ${p.border}`,paddingTop:9}}>{p.whenToUse}</div>
+              </div>
+            );
+          })}
+        </div>
+        <button onClick={resetF} style={{background:"#21262D",border:"1px solid #30363D",borderRadius:6,padding:"7px 14px",color:"#E6EDF3",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>🔄 Try Another</button>
+      </div>
+    )}
+  </div>
+</div>
+)}
+
+{/* PROBLEM LOG */}
+{view==="log"&&(
+<div style={{flex:1,overflowY:"auto",padding:18}}>
+<div style={{maxWidth:900,margin:"0 auto"}}>
+
+{/* Stats */}
+<div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12,marginBottom:20}}>
+  <div>
+    <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>📝 Problem Log</div>
+    <div style={{fontSize:11,color:"#8B949E"}}>Track every problem you practice — approach, patterns, follow-ups and notes.</div>
+  </div>
+  <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+    <div style={{display:"flex",gap:5}}>
+      {[["total",log.length,"#58A6FF"],["easy",log.filter(x=>x.diff==="easy").length,"#56D364"],["medium",log.filter(x=>x.diff==="medium").length,"#FFD700"],["hard",log.filter(x=>x.diff==="hard").length,"#FF7B72"]].map(([l,n,c])=>(
+        <div key={l} style={{background:"#161B22",border:"1px solid #30363D",borderRadius:6,padding:"5px 10px",textAlign:"center",minWidth:44}}>
+          <div style={{fontSize:15,fontWeight:700,color:c}}>{n}</div>
+          <div style={{fontSize:9,color:"#8B949E",marginTop:1}}>{l}</div>
+        </div>
+      ))}
+    </div>
+    <button onClick={openAdd} style={{background:"#238636",border:"1px solid #2EA043",borderRadius:6,padding:"7px 14px",color:"#fff",cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:700}}>+ Add Problem</button>
+  </div>
+</div>
+
+{/* Filters */}
+<div style={{display:"flex",gap:7,marginBottom:14,flexWrap:"wrap"}}>
+  <input placeholder="🔍 Search problems, patterns, notes…" value={logSearch} onChange={e=>setLogSearch(e.target.value)}
+    style={{background:"#161B22",border:"1px solid #21262D",borderRadius:5,padding:"6px 9px",color:"#E6EDF3",fontSize:11,fontFamily:"inherit",outline:"none",flex:"1",minWidth:180}}/>
+  <select value={logFilterPat} onChange={e=>setLogFilterPat(e.target.value)}
+    style={{background:"#161B22",border:"1px solid #21262D",borderRadius:5,padding:"6px 9px",color:logFilterPat?"#E6EDF3":"#8B949E",fontSize:11,fontFamily:"inherit",outline:"none"}}>
+    <option value="">All patterns</option>
+    {[...new Set(log.map(x=>x.pattern))].sort().map(p=><option key={p} value={p}>{p}</option>)}
+  </select>
+  <select value={logFilterDiff} onChange={e=>setLogFilterDiff(e.target.value)}
+    style={{background:"#161B22",border:"1px solid #21262D",borderRadius:5,padding:"6px 9px",color:logFilterDiff?"#E6EDF3":"#8B949E",fontSize:11,fontFamily:"inherit",outline:"none"}}>
+    <option value="">All difficulties</option>
+    <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
+  </select>
+</div>
+
+{/* Problem Cards */}
+{log.filter(e=>{
+  if(logFilterDiff&&e.diff!==logFilterDiff)return false;
+  if(logFilterPat&&e.pattern!==logFilterPat)return false;
+  if(logSearch){const q=logSearch.toLowerCase();return e.name.toLowerCase().includes(q)||e.pattern.toLowerCase().includes(q)||(e.approach||"").toLowerCase().includes(q)||(e.notes||"").toLowerCase().includes(q);}
+  return true;
+}).map(e=>{
+  const dc=DIFF_COLORS[e.diff]||DIFF_COLORS.medium;
+  const pp=P.find(x=>x.name.toLowerCase().includes(e.pattern.split(" ")[0].toLowerCase().replace(/[^a-z]/g,"")));
+  const pc=pp?.color||"#58A6FF"; const pb=pp?.border||"#58A6FF40";
+  const isOpen=openCards[e.id];
+  return(
+  <div key={e.id} style={{background:"#161B22",border:`1px solid ${isOpen?pb:"#21262D"}`,borderRadius:10,marginBottom:7,overflow:"hidden",transition:"border-color 0.2s"}}>
+
+    {/* Header */}
+    <div onClick={()=>toggleCard(e.id)} style={{padding:"11px 14px",cursor:"pointer",display:"flex",alignItems:"flex-start",gap:10,justifyContent:"space-between"}}>
+      <div style={{display:"flex",alignItems:"flex-start",gap:9,flex:1,minWidth:0}}>
+        <div style={{marginTop:3,width:18,height:18,borderRadius:3,background:dc.bg,border:`1px solid ${dc.b}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          <span style={{fontSize:8,color:dc.c,fontWeight:700}}>{e.diff[0].toUpperCase()}</span>
+        </div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#E6EDF3",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+            {e.lcNum?<span style={{color:"#484F58",fontSize:11,marginRight:6}}>#{e.lcNum}</span>:null}{e.name}
+          </div>
+          <div style={{display:"flex",gap:5,marginTop:4,flexWrap:"wrap",alignItems:"center"}}>
+            <span style={{fontSize:10,color:pc,background:pb.replace("40","18"),border:`1px solid ${pb}`,borderRadius:3,padding:"1px 7px"}}>{pp?.emoji||"📌"} {e.pattern}</span>
+            {e.alts&&e.alts.slice(0,2).map(a=><span key={a} style={{fontSize:9,color:"#8B949E",background:"#21262D",border:"1px solid #30363D",borderRadius:3,padding:"1px 6px"}}>{a}</span>)}
+            <span style={{fontSize:9,color:"#484F58"}}>{e.date}</span>
+          </div>
+        </div>
+      </div>
+      <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
+        <button onClick={ev=>{ev.stopPropagation();openEdit(e);}} style={{background:"#21262D",border:"1px solid #30363D",borderRadius:4,padding:"3px 8px",color:"#8B949E",cursor:"pointer",fontSize:10,fontFamily:"inherit"}}>Edit</button>
+        <button onClick={ev=>{ev.stopPropagation();setDelId(e.id);}} style={{background:"#21262D",border:"1px solid #30363D",borderRadius:4,padding:"3px 8px",color:"#FF7B72",cursor:"pointer",fontSize:10,fontFamily:"inherit"}}>Del</button>
+        <span style={{fontSize:9,color:"#484F58",marginLeft:2,userSelect:"none"}}>{isOpen?"▲":"▼"}</span>
+      </div>
+    </div>
+
+    {/* Expanded body */}
+    {isOpen&&(
+    <div style={{borderTop:"1px solid #21262D",padding:"13px 14px 8px"}}>
+
+      {e.approach&&(
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:9,color:pc,fontWeight:700,letterSpacing:1,marginBottom:5}}>💡 APPROACH</div>
+          <div style={{background:"#0D1117",border:`1px solid ${pb}`,borderLeft:`3px solid ${pc}`,borderRadius:6,padding:"9px 12px",fontSize:11,color:"#C9D1D9",lineHeight:1.8}}>{e.approach}</div>
+        </div>
+      )}
+
+      {e.alts&&e.alts.length>0&&(
+        <div style={{marginBottom:12}}>
+          <div style={{fontSize:9,color:"#8B949E",fontWeight:700,letterSpacing:1,marginBottom:5}}>🔀 ALTERNATE / PAIRED PATTERNS</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+            {e.alts.map(a=>{const ap=P.find(x=>x.name.toLowerCase().includes(a.split(" ")[0].toLowerCase().replace(/[^a-z]/g,"")));
+              return <span key={a} style={{fontSize:10,color:ap?.color||"#8B949E",background:(ap?.color||"#8B949E")+"15",border:`1px solid ${(ap?.color||"#8B949E")}40`,borderRadius:100,padding:"2px 9px"}}>{ap?.emoji||"🔧"} {a}</span>;
+            })}
+          </div>
+        </div>
+      )}
+
+      {e.notes&&(
+        <div style={{marginBottom:10}}>
+          <div style={{fontSize:9,color:"#8B949E",fontWeight:700,letterSpacing:1,marginBottom:5}}>📌 NOTES / EDGE CASES</div>
+          <div style={{background:"#1C2128",border:"1px solid #30363D",borderRadius:6,padding:"9px 12px",fontSize:11,color:"#C9D1D9",lineHeight:1.8}}>{e.notes}</div>
+        </div>
+      )}
+
+      {e.followups&&e.followups.length>0&&(
+        <div style={{marginBottom:7}}>
+          <div onClick={()=>toggleSection(e.id+"_fu")} style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",padding:"5px 0",marginBottom:openSections[e.id+"_fu"]?7:0}}>
+            <div style={{fontSize:9,color:"#FDCB6E",fontWeight:700,letterSpacing:1}}>🎯 FOLLOW-UP QUESTIONS <span style={{color:"#484F58",fontWeight:400}}>({e.followups.length})</span></div>
+            <span style={{fontSize:9,color:"#484F58"}}>{openSections[e.id+"_fu"]?"▲ hide":"▼ show"}</span>
+          </div>
+          {openSections[e.id+"_fu"]&&(
+            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+              {e.followups.map((f,i)=>(
+                <div key={i} style={{background:"#0D1117",border:"1px solid #FDCB6E25",borderLeft:"2px solid #FDCB6E",borderRadius:5,padding:"7px 10px",display:"flex",gap:8,alignItems:"flex-start"}}>
+                  <span style={{color:"#FDCB6E",fontSize:10,fontWeight:700,flexShrink:0,marginTop:1}}>{i+1}.</span>
+                  <span style={{fontSize:11,color:"#C9D1D9",lineHeight:1.6}}>{f}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {e.similar&&e.similar.length>0&&(
+        <div style={{marginBottom:7}}>
+          <div onClick={()=>toggleSection(e.id+"_sim")} style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",padding:"5px 0",marginBottom:openSections[e.id+"_sim"]?7:0}}>
+            <div style={{fontSize:9,color:"#00D4FF",fontWeight:700,letterSpacing:1}}>🔗 SIMILAR / RELATED PROBLEMS <span style={{color:"#484F58",fontWeight:400}}>({e.similar.length})</span></div>
+            <span style={{fontSize:9,color:"#484F58"}}>{openSections[e.id+"_sim"]?"▲ hide":"▼ show"}</span>
+          </div>
+          {openSections[e.id+"_sim"]&&(
+            <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+              {e.similar.map((s,i)=><span key={i} style={{fontSize:10,background:"#00D4FF10",border:"1px solid #00D4FF30",color:"#00D4FF",borderRadius:4,padding:"3px 9px"}}>{s}</span>)}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div style={{height:5}}/>
+    </div>
+    )}
+  </div>
+  );
+})}
+
+{log.filter(e=>{if(logFilterDiff&&e.diff!==logFilterDiff)return false;if(logFilterPat&&e.pattern!==logFilterPat)return false;if(logSearch){const q=logSearch.toLowerCase();return e.name.toLowerCase().includes(q)||e.pattern.toLowerCase().includes(q)||(e.approach||"").toLowerCase().includes(q)||(e.notes||"").toLowerCase().includes(q);}return true;}).length===0&&(
+  <div style={{textAlign:"center",padding:"3rem 1rem",color:"#484F58",fontSize:12}}>No problems match your filters.</div>
+)}
+</div>
+</div>
+)}
+
+{/* ADD / EDIT MODAL */}
+{logModal&&(
+<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:200,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:20,overflowY:"auto"}}>
+<div style={{background:"#161B22",border:"1px solid #30363D",borderRadius:12,width:"100%",maxWidth:620,padding:22,marginTop:10}}>
+  <div style={{fontSize:14,fontWeight:700,marginBottom:18,color:"#E6EDF3"}}>{editId?"✏️ Edit Problem":"➕ Add Problem"}</div>
+
+  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+    <div style={{gridColumn:"1/-1"}}>
+      <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:5}}>PROBLEM NAME *</div>
+      <input value={formData.name} onChange={e=>setFormData(p=>({...p,name:e.target.value}))} placeholder="e.g. Two Sum"
+        style={{width:"100%",background:"#0D1117",border:`1px solid ${formData.name?"#30363D":"#FF7B7260"}`,borderRadius:5,padding:"7px 10px",color:"#E6EDF3",fontSize:11,fontFamily:"inherit",outline:"none"}}/>
+    </div>
+    <div>
+      <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:5}}>LEETCODE # (optional)</div>
+      <input value={formData.lcNum} onChange={e=>setFormData(p=>({...p,lcNum:e.target.value}))} placeholder="e.g. 76"
+        style={{width:"100%",background:"#0D1117",border:"1px solid #30363D",borderRadius:5,padding:"7px 10px",color:"#E6EDF3",fontSize:11,fontFamily:"inherit",outline:"none"}}/>
+    </div>
+    <div>
+      <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:5}}>DIFFICULTY</div>
+      <select value={formData.diff} onChange={e=>setFormData(p=>({...p,diff:e.target.value}))}
+        style={{width:"100%",background:"#0D1117",border:"1px solid #30363D",borderRadius:5,padding:"7px 10px",color:"#E6EDF3",fontSize:11,fontFamily:"inherit",outline:"none"}}>
+        <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
+      </select>
+    </div>
+  </div>
+
+  <div style={{marginBottom:12}}>
+    <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:5}}>PRIMARY PATTERN</div>
+    <select value={formData.pattern} onChange={e=>setFormData(p=>({...p,pattern:e.target.value}))}
+      style={{width:"100%",background:"#0D1117",border:"1px solid #30363D",borderRadius:5,padding:"7px 10px",color:"#E6EDF3",fontSize:11,fontFamily:"inherit",outline:"none"}}>
+      {ALL_PATS.map(p=><option key={p} value={p}>{p}</option>)}
+    </select>
+  </div>
+
+  <div style={{marginBottom:12}}>
+    <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:6}}>ALTERNATE / PAIRED PATTERNS <span style={{color:"#484F58",fontSize:9}}>(click to toggle)</span></div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+      {ALL_PATS.filter(p=>p!==formData.pattern).map(p=>{
+        const sel=formData.alts.includes(p);
+        const ap=P.find(x=>x.name.toLowerCase().includes(p.split(" ")[0].toLowerCase().replace(/[^a-z]/g,"")));
+        return <button key={p} onClick={()=>toggleAlt(p)} style={{fontSize:10,background:sel?(ap?.color||"#58A6FF")+"20":"#21262D",border:`1px solid ${sel?(ap?.color||"#58A6FF")+"50":"#30363D"}`,color:sel?ap?.color||"#58A6FF":"#8B949E",borderRadius:100,padding:"3px 9px",cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>{sel?"✓ ":""}{p}</button>;
+      })}
+    </div>
+  </div>
+
+  {[["approach","💡 APPROACH TAKEN","Describe your approach, key insight, time/space complexity…",4],
+    ["followups","🎯 FOLLOW-UP QUESTIONS (one per line)","Find All Anagrams in a String (LC 438)\nSmallest Range Covering K Lists (LC 632)\n…",3],
+    ["similar","🔗 SIMILAR / RELATED PROBLEMS (one per line)","Permutation in String\nLongest Substring Without Repeating Chars\n…",2],
+    ["notes","📌 NOTES / EDGE CASES","Edge cases, mistakes made, key tricks, gotchas…",3]
+  ].map(([field,label,ph,rows])=>(
+    <div key={field} style={{marginBottom:12}}>
+      <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:5}}>{label}</div>
+      <textarea value={formData[field]} onChange={e=>setFormData(p=>({...p,[field]:e.target.value}))} placeholder={ph} rows={rows}
+        style={{width:"100%",background:"#0D1117",border:"1px solid #30363D",borderRadius:5,padding:"8px 10px",color:"#E6EDF3",fontSize:11,fontFamily:"inherit",resize:"vertical",outline:"none",lineHeight:1.6}}/>
+    </div>
+  ))}
+
+  <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:6}}>
+    <button onClick={()=>setLogModal(false)} style={{background:"#21262D",border:"1px solid #30363D",borderRadius:5,padding:"7px 16px",color:"#8B949E",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>Cancel</button>
+    <button onClick={saveEntry} style={{background:formData.name?"#238636":"#21262D",border:`1px solid ${formData.name?"#2EA043":"#30363D"}`,borderRadius:5,padding:"7px 16px",color:formData.name?"#fff":"#484F58",cursor:formData.name?"pointer":"default",fontSize:11,fontFamily:"inherit",fontWeight:700}}>
+      {editId?"Save Changes":"Add Problem"}
+    </button>
+  </div>
+</div>
+</div>
+)}
+
+{/* DELETE CONFIRM */}
+{delId&&(
+<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.75)",zIndex:201,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+<div style={{background:"#161B22",border:"1px solid #30363D",borderRadius:10,padding:20,maxWidth:300,width:"100%"}}>
+  <div style={{fontSize:13,fontWeight:700,marginBottom:7,color:"#E6EDF3"}}>Delete problem?</div>
+  <div style={{fontSize:11,color:"#8B949E",marginBottom:16}}>This cannot be undone.</div>
+  <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
+    <button onClick={()=>setDelId(null)} style={{background:"#21262D",border:"1px solid #30363D",borderRadius:5,padding:"6px 14px",color:"#8B949E",cursor:"pointer",fontSize:11,fontFamily:"inherit"}}>Cancel</button>
+    <button onClick={()=>deleteEntry(delId)} style={{background:"#6E1A1A",border:"1px solid #FF7B7250",borderRadius:5,padding:"6px 14px",color:"#FF7B72",cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:700}}>Delete</button>
+  </div>
+</div>
+</div>
+)}
+
+{/* APPROACH */}
+{view==="approach"&&(()=>{
+const steps=[
+{step:0,label:"Always Start Here",title:"Brute Force First",color:"#8B949E",bg:"#8B949E15",border:"#8B949E40",desc:"Write the naive O(n²) or O(n³) solution out loud before pattern-matching. Proves you understand the problem, gives a baseline, and shows the interviewer your reasoning. Google L4 interviewers care deeply about this — never skip it.",signal:"Always — no exceptions",pids:[]},
+{step:1,label:"Step 1 — Array / String",title:"Sliding Window · Two Pointers",color:"#00D4FF",bg:"#00D4FF15",border:"#00D4FF40",desc:"Is the brute force doing repeated work over a linear structure? These cover the largest chunk of array/string problems and are the most common easy-win optimizations.",signal:"Subarray / substring · contiguous range · pair/triplet sums · sorted input",pids:[1,2]},
+{step:2,label:"Step 2 — Sorted Input",title:"Binary Search",color:"#FFD700",bg:"#FFD70015",border:"#FFD70040",desc:"Is the input sorted, or can sorting help? Can you binary search on the answer instead of the array? Covers 'minimize the maximum' and 'maximize the minimum' families.",signal:"Sorted / rotated · find min/max · monotonic condition · log n hint",pids:[4]},
+{step:3,label:"Step 3 — Graph / Tree",title:"BFS · DFS · Topological Sort",color:"#FF9F43",bg:"#FF9F4315",border:"#FF9F4340",desc:"Does the problem involve a graph or tree? Shortest path (BFS), all paths/components (DFS), or ordering with dependencies (Topo Sort)?",signal:"shortest / min steps → BFS · all paths / islands → DFS · prereqs / order → Topo Sort",pids:[5,6,14]},
+{step:4,label:"Step 4 — Repeated Subproblems",title:"Dynamic Programming",color:"#FD79A8",bg:"#FD79A815",border:"#FD79A840",desc:"Does your brute force recursion recompute the same inputs? Add memoization first (top-down), then convert to tabulation (bottom-up). The recurrence relation is the hardest part.",signal:"max / min / count ways / longest · decision at each step · optimal substructure",pids:[7]},
+{step:5,label:"Step 5 — Top K / Streaming",title:"Heap / Priority Queue",color:"#00CEC9",bg:"#00CEC915",border:"#00CEC940",desc:"Do you need repeated access to min/max, especially with a K constraint? Min-heap for K largest, max-heap (negate priority) for K smallest.",signal:"top K / K largest / K smallest · merge K sorted · streaming median",pids:[9]},
+{step:6,label:"Step 6 — All Possibilities",title:"Backtracking",color:"#FDCB6E",bg:"#FDCB6E15",border:"#FDCB6E40",desc:"Do you need to explore all options and undo invalid choices? Choose → Explore → Unchoose. Add pruning to cut branches early.",signal:"all possible / generate / find all · constraint satisfaction · N-Queens / Sudoku",pids:[8]},
+];
+const hints=[
+{k:"k",p:"Sliding Window · Heap",c:"#00D4FF"},
+{k:"shortest / minimum steps",p:"BFS",c:"#FF9F43"},
+{k:"all possible / generate",p:"Backtracking",c:"#FDCB6E"},
+{k:"prerequisite / dependency",p:"Topological Sort",c:"#55EFC4"},
+{k:"sorted / rotated",p:"Binary Search · Two Pointers",c:"#FFD700"},
+{k:"cycle / middle",p:"Fast & Slow Pointers",c:"#A8FF78"},
+{k:"range sum / subarray sum = k",p:"Prefix Sum",c:"#DDA0DD"},
+{k:"connected / same group",p:"Union-Find",c:"#E17055"},
+{k:"next greater / histogram",p:"Monotonic Stack",c:"#B8E994"},
+{k:"prefix / word / dictionary",p:"Trie",c:"#74B9FF"},
+];
+return(
+<div style={{flex:1,overflowY:"auto",padding:18}}>
+<div style={{maxWidth:780,margin:"0 auto"}}>
+  <div style={{marginBottom:20}}>
+    <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>🧭 Interview Approach Order</div>
+    <div style={{fontSize:11,color:"#8B949E"}}>Mental order to work through when you see a new problem. Covers ~85% of Google L4.</div>
+  </div>
+  <div style={{position:"relative"}}>
+    <div style={{position:"absolute",left:21,top:42,bottom:42,width:2,background:"linear-gradient(to bottom,#30363D,#21262D)",zIndex:0}}/>
+    {steps.map((s,idx)=>(
+      <div key={idx} style={{display:"flex",gap:12,marginBottom:12,position:"relative",zIndex:1}}>
+        <div style={{width:42,height:42,borderRadius:"50%",background:s.step===0?"#21262D":s.bg,border:`2px solid ${s.border}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:s.step===0?9:13,fontWeight:700,color:s.step===0?"#8B949E":s.color}}>
+          {s.step===0?"GO":s.step}
+        </div>
+        <div style={{flex:1,background:"#161B22",border:`1px solid ${s.border}`,borderRadius:9,padding:14}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:7,marginBottom:7}}>
+            <div>
+              <div style={{fontSize:9,color:s.color,letterSpacing:1,fontWeight:700,marginBottom:2}}>{s.label.toUpperCase()}</div>
+              <div style={{fontSize:13,color:"#E6EDF3",fontWeight:700}}>{s.title}</div>
+            </div>
+            {s.pids.length>0&&(
+              <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                {s.pids.map(id=>{const p=P.find(x=>x.id===id);return(
+                  <button key={id} onClick={()=>goTo(id)} style={{background:p.bg,border:`1px solid ${p.border}`,borderRadius:3,padding:"2px 7px",color:p.color,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{p.emoji} {p.name}</button>
+                );})}
+              </div>
+            )}
+          </div>
+          <div style={{fontSize:11,color:"#C9D1D9",lineHeight:1.7,marginBottom:8}}>{s.desc}</div>
+          <div style={{background:"#0D1117",borderRadius:4,padding:"5px 9px",borderLeft:`3px solid ${s.color}`}}>
+            <span style={{fontSize:9,color:s.color,fontWeight:700,letterSpacing:1}}>SIGNAL: </span>
+            <span style={{fontSize:10,color:"#8B949E"}}>{s.signal}</span>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+  <div style={{marginTop:24}}>
+    <div style={{fontSize:12,fontWeight:700,marginBottom:3}}>⚡ Constraint Keyword Lookup</div>
+    <div style={{fontSize:10,color:"#8B949E",marginBottom:10}}>The pattern is usually hidden in the constraint. Train yourself to read these.</div>
+    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))",gap:6}}>
+      {hints.map((h,i)=>(
+        <div key={i} style={{background:"#161B22",border:`1px solid ${h.c}30`,borderRadius:6,padding:"8px 11px"}}>
+          <div style={{fontSize:10,color:h.c,fontWeight:700,marginBottom:1}}>"{h.k}"</div>
+          <div style={{fontSize:10,color:"#8B949E"}}>→ {h.p}</div>
+        </div>
+      ))}
+    </div>
+  </div>
+  <div style={{marginTop:18,background:"#1C2128",border:"1px solid #30363D",borderRadius:7,padding:13}}>
+    <div style={{fontSize:9,color:"#F0883E",fontWeight:700,letterSpacing:1,marginBottom:6}}>📊 COVERAGE NOTE</div>
+    <div style={{fontSize:11,color:"#C9D1D9",lineHeight:1.7}}>
+      <strong style={{color:"#00D4FF"}}>Arrays → Sliding Window / Two Pointers. </strong>
+      <strong style={{color:"#FF9F43"}}>Graphs → BFS / DFS. </strong>
+      <strong style={{color:"#FD79A8"}}>Optimal + repeated subproblems → DP. </strong>
+      These three cover roughly <strong style={{color:"#56D364"}}>70% of Google L4 problems</strong>. Master them first.
+    </div>
+  </div>
+</div>
+</div>
+);
+})()}
+
+</div>
+);
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
