@@ -3608,6 +3608,12 @@ const toggleStatus=(id,key)=>{
   saveStatus(next);
 };
 const getStatus=(id)=>problemStatus[id]||{theory:false,practiced:false,coded:false,revisit:false};
+const [followupStatus,setFollowupStatus]=useState(()=>{try{const s=localStorage.getItem("dsa_followup_status");if(s)return JSON.parse(s);}catch{}return{};});
+const saveFollowupStatus=(next)=>{setFollowupStatus(next);try{localStorage.setItem("dsa_followup_status",JSON.stringify(next));}catch{}};
+const toggleFollowup=(probId,fuIdx)=>{const key=probId+"::"+fuIdx;saveFollowupStatus({...followupStatus,[key]:!followupStatus[key]});};
+const isFuDone=(probId,fuIdx)=>!!followupStatus[probId+"::"+fuIdx];
+const fuStats=(e)=>{if(!e.followups||!e.followups.length)return{t:0,d:0};const d=e.followups.filter((_,i)=>isFuDone(e.id,i)).length;return{t:e.followups.length,d};};
+const [logFilterFollowup,setLogFilterFollowup]=useState("");
 
 const saveLog=(next)=>{setLog(next);try{localStorage.setItem("dsa_problem_log_v2",JSON.stringify(next));}catch{}};
 const toggleCard=(id)=>setOpenCards(p=>({...p,[id]:!p[id]}));
@@ -3991,6 +3997,11 @@ return(
           <div style={{fontSize:9,color:"#8B949E",marginTop:1}}>{icon}</div>
         </div>
       ))}
+      <div style={{width:"1px",background:"#30363D",margin:"0 2px"}}/>
+      <div style={{background:"#161B22",border:"1px solid #FDCB6E30",borderRadius:6,padding:"5px 10px",textAlign:"center",minWidth:48}}>
+        <div style={{fontSize:15,fontWeight:700,color:Object.keys(followupStatus).filter(k=>followupStatus[k]).length>=log.reduce((a,e)=>a+(e.followups?e.followups.length:0),0)&&log.reduce((a,e)=>a+(e.followups?e.followups.length:0),0)>0?"#56D364":"#FDCB6E"}}>{Object.keys(followupStatus).filter(k=>followupStatus[k]).length}<span style={{fontSize:10,color:"#484F58",fontWeight:400}}>/{log.reduce((a,e)=>a+(e.followups?e.followups.length:0),0)}</span></div>
+        <div style={{fontSize:9,color:"#8B949E",marginTop:1}}>🎯</div>
+      </div>
     </div>
     <button onClick={openAdd} style={{background:"#238636",border:"1px solid #2EA043",borderRadius:6,padding:"7px 14px",color:"#fff",cursor:"pointer",fontSize:11,fontFamily:"inherit",fontWeight:700}}>+ Add Problem</button>
   </div>
@@ -4020,6 +4031,15 @@ return(
     <option value="mastered">⭐ Mastered (all 3)</option>
     <option value="untouched">○ Not started</option>
   </select>
+  <select value={logFilterFollowup} onChange={e=>setLogFilterFollowup(e.target.value)}
+    style={{background:"#161B22",border:"1px solid "+(logFilterFollowup?"#FDCB6E60":"#21262D"),borderRadius:5,padding:"6px 9px",color:logFilterFollowup?"#FDCB6E":"#8B949E",fontSize:11,fontFamily:"inherit",outline:"none"}}>
+    <option value="">🎯 Follow-ups: All</option>
+    <option value="has">Has follow-ups</option>
+    <option value="none">No follow-ups</option>
+    <option value="all_done">✅ All done</option>
+    <option value="pending">⏳ Pending</option>
+    <option value="partial">◑ Partial</option>
+  </select>
 </div>
 
 {/* Problem Cards */}
@@ -4035,6 +4055,7 @@ return(
     if(logFilterStatus==="mastered"&&!(st.theory&&st.practiced&&st.coded))return false;
     if(logFilterStatus==="untouched"&&(st.theory||st.practiced||st.coded))return false;
   }
+  if(logFilterFollowup){const fs=fuStats(e);if(logFilterFollowup==="has"&&!fs.t)return false;if(logFilterFollowup==="none"&&fs.t)return false;if(logFilterFollowup==="all_done"&&(fs.t===0||fs.d<fs.t))return false;if(logFilterFollowup==="pending"&&(fs.t===0||fs.d===fs.t))return false;if(logFilterFollowup==="partial"&&(fs.t===0||fs.d===0||fs.d===fs.t))return false;}
   if(logSearch){const q=logSearch.toLowerCase();return e.name.toLowerCase().includes(q)||e.pattern.toLowerCase().includes(q)||(e.approach||"").toLowerCase().includes(q)||(e.notes||"").toLowerCase().includes(q);}
   return true;
 }).map(e=>{
@@ -4065,6 +4086,7 @@ return(
           <div style={{display:"flex",gap:5,marginTop:4,flexWrap:"wrap",alignItems:"center"}}>
             <span style={{fontSize:10,color:pc,background:pb.replace("40","18"),border:`1px solid ${pb}`,borderRadius:3,padding:"1px 7px"}}>{pp?.emoji||"📌"} {e.pattern}</span>
             {e.alts&&e.alts.slice(0,2).map(a=><span key={a} style={{fontSize:9,color:"#8B949E",background:"#21262D",border:"1px solid #30363D",borderRadius:3,padding:"1px 6px"}}>{a}</span>)}
+            {e.followups&&e.followups.length>0&&<span style={{fontSize:9,color:fuStats(e).d===fuStats(e).t?"#56D364":"#FDCB6E",background:fuStats(e).d===fuStats(e).t?"#56D36415":"#FDCB6E15",border:"1px solid "+(fuStats(e).d===fuStats(e).t?"#56D36440":"#FDCB6E40"),borderRadius:3,padding:"1px 6px"}}>🎯 {fuStats(e).d}/{fuStats(e).t}{fuStats(e).d===fuStats(e).t?" ✅":""}</span>}
             <span style={{fontSize:9,color:"#484F58"}}>{e.date}</span>
           </div>
         </div>
@@ -4143,15 +4165,23 @@ return(
       {e.followups&&e.followups.length>0&&(
         <div style={{marginBottom:7}}>
           <div onClick={()=>toggleSection(e.id+"_fu")} style={{display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer",padding:"5px 0",marginBottom:openSections[e.id+"_fu"]?7:0}}>
-            <div style={{fontSize:9,color:"#FDCB6E",fontWeight:700,letterSpacing:1}}>🎯 FOLLOW-UP QUESTIONS <span style={{color:"#484F58",fontWeight:400}}>({e.followups.length})</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:7}}>
+              <div style={{fontSize:9,color:fuStats(e).d===fuStats(e).t?"#56D364":"#FDCB6E",fontWeight:700,letterSpacing:1}}>🎯 FOLLOW-UP QUESTIONS</div>
+              <div style={{background:"#21262D",borderRadius:3,height:4,width:44,overflow:"hidden"}}>
+                <div style={{height:"100%",width:(fuStats(e).t?Math.round(fuStats(e).d/fuStats(e).t*100):0)+"%",background:fuStats(e).d===fuStats(e).t?"#56D364":"#FDCB6E",borderRadius:3}}/>
+              </div>
+              <span style={{fontSize:9,color:fuStats(e).d===fuStats(e).t?"#56D364":"#8B949E"}}>{fuStats(e).d===fuStats(e).t?"✅ all done":fuStats(e).d+"/"+fuStats(e).t}</span>
+            </div>
             <span style={{fontSize:9,color:"#484F58"}}>{openSections[e.id+"_fu"]?"▲ hide":"▼ show"}</span>
           </div>
           {openSections[e.id+"_fu"]&&(
-            <div style={{display:"flex",flexDirection:"column",gap:4}}>
+            <div onClick={ev=>ev.stopPropagation()} style={{display:"flex",flexDirection:"column",gap:4}}>
               {e.followups.map((f,i)=>(
-                <div key={i} style={{background:"#0D1117",border:"1px solid #FDCB6E25",borderLeft:"2px solid #FDCB6E",borderRadius:5,padding:"7px 10px",display:"flex",gap:8,alignItems:"flex-start"}}>
-                  <span style={{color:"#FDCB6E",fontSize:10,fontWeight:700,flexShrink:0,marginTop:1}}>{i+1}.</span>
-                  <span style={{fontSize:11,color:"#C9D1D9",lineHeight:1.6}}>{f}</span>
+                <div key={i} onClick={()=>toggleFollowup(e.id,i)} style={{background:isFuDone(e.id,i)?"#56D36408":"#0D1117",border:isFuDone(e.id,i)?"1px solid #56D36435":"1px solid #FDCB6E25",borderLeft:"2px solid "+(isFuDone(e.id,i)?"#56D364":"#FDCB6E"),borderRadius:5,padding:"7px 10px",display:"flex",gap:8,alignItems:"flex-start",cursor:"pointer"}}>
+                  <div style={{width:13,height:13,borderRadius:2,border:"1.5px solid "+(isFuDone(e.id,i)?"#56D364":"#FDCB6E60"),background:isFuDone(e.id,i)?"#56D364":"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:2}}>
+                    {isFuDone(e.id,i)&&<span style={{fontSize:8,color:"#0D1117",fontWeight:900}}>✓</span>}
+                  </div>
+                  <span style={{fontSize:11,color:isFuDone(e.id,i)?"#56D36490":"#C9D1D9",lineHeight:1.6,textDecoration:isFuDone(e.id,i)?"line-through":"none"}}>{f}</span>
                 </div>
               ))}
             </div>
@@ -4180,7 +4210,7 @@ return(
   );
 })}
 
-{log.filter(e=>{if(logFilterDiff&&e.diff!==logFilterDiff)return false;if(logFilterPat&&e.pattern!==logFilterPat)return false;if(logFilterStatus){const st=getStatus(e.id);if(logFilterStatus==="theory"&&!st.theory)return false;if(logFilterStatus==="practiced"&&!st.practiced)return false;if(logFilterStatus==="coded"&&!st.coded)return false;if(logFilterStatus==="revisit"&&!st.revisit)return false;if(logFilterStatus==="mastered"&&!(st.theory&&st.practiced&&st.coded))return false;if(logFilterStatus==="untouched"&&(st.theory||st.practiced||st.coded))return false;}if(logSearch){const q=logSearch.toLowerCase();return e.name.toLowerCase().includes(q)||e.pattern.toLowerCase().includes(q)||(e.approach||"").toLowerCase().includes(q)||(e.notes||"").toLowerCase().includes(q);}return true;}).length===0&&(
+{log.filter(e=>{if(logFilterDiff&&e.diff!==logFilterDiff)return false;if(logFilterPat&&e.pattern!==logFilterPat)return false;if(logFilterStatus){const st=getStatus(e.id);if(logFilterStatus==="theory"&&!st.theory)return false;if(logFilterStatus==="practiced"&&!st.practiced)return false;if(logFilterStatus==="coded"&&!st.coded)return false;if(logFilterStatus==="revisit"&&!st.revisit)return false;if(logFilterStatus==="mastered"&&!(st.theory&&st.practiced&&st.coded))return false;if(logFilterStatus==="untouched"&&(st.theory||st.practiced||st.coded))return false;}if(logFilterFollowup){const fs=fuStats(e);if(logFilterFollowup==="has"&&!fs.t)return false;if(logFilterFollowup==="none"&&fs.t)return false;if(logFilterFollowup==="all_done"&&(fs.t===0||fs.d<fs.t))return false;if(logFilterFollowup==="pending"&&(fs.t===0||fs.d===fs.t))return false;if(logFilterFollowup==="partial"&&(fs.t===0||fs.d===0||fs.d===fs.t))return false;}if(logSearch){const q=logSearch.toLowerCase();return e.name.toLowerCase().includes(q)||e.pattern.toLowerCase().includes(q)||(e.approach||"").toLowerCase().includes(q)||(e.notes||"").toLowerCase().includes(q);}return true;}).length===0&&(
   <div style={{textAlign:"center",padding:"3rem 1rem",color:"#484F58",fontSize:12}}>No problems match your filters.</div>
 )}
 </div>
