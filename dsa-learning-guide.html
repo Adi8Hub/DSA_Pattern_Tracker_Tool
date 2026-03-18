@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DSA Patterns — Learning Order Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--border-bright:#2d2d45;--text:#e2e2f0;--muted:#6b6b8a;--accent:#7c6af7;--accent3:#6af7c8;--accent4:#f76a6a;--code-bg:#0d0d15;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(124,106,247,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(124,106,247,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.page-wrap{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:0 20px 80px;}
+header{padding:60px 0 40px;border-bottom:1px solid var(--border);margin-bottom:40px;}
+.eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:16px;}
+header h1{font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.1;background:linear-gradient(135deg,#fff 0%,#a0a0c0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+header p{margin-top:16px;color:var(--muted);font-size:15px;line-height:1.6;max-width:600px;}
+.stats{display:flex;gap:32px;margin-top:28px;flex-wrap:wrap;}
+.stat-val{font-size:28px;font-weight:800;color:var(--accent);}
+.stat-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.phase-header{display:flex;align-items:center;gap:16px;margin:48px 0 20px;}
+.phase-badge{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:3px;background:rgba(124,106,247,0.15);color:var(--accent);border:1px solid rgba(124,106,247,0.3);white-space:nowrap;}
+.phase-title{font-size:13px;color:var(--muted);}
+.phase-line{flex:1;height:1px;background:var(--border);}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;transition:border-color 0.2s;}
+.card:hover,.card.open{border-color:var(--border-bright);}
+.card-toggle{width:100%;background:none;border:none;cursor:pointer;padding:20px 24px;display:flex;align-items:center;gap:16px;text-align:left;transition:background 0.15s;}
+.card-toggle:hover{background:rgba(255,255,255,0.02);}
+.num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1.5px solid;}
+.tl{display:flex;align-items:center;gap:16px;flex:1;}
+.pname{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.psub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);}
+.tags{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.tag{font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:3px;background:rgba(255,255,255,0.05);color:var(--muted);}
+.chev{color:var(--muted);transition:transform 0.3s;font-size:16px;flex-shrink:0;}
+.card.open .chev{transform:rotate(180deg);}
+.card-body{display:none;border-top:1px solid var(--border);}
+.card.open .card-body{display:block;}
+.inner{padding:28px 24px;}
+.sec{margin-bottom:28px;}
+.sec:last-child{margin-bottom:0;}
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:600px){.sg{grid-template-columns:1fr;}}
+.sb{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;}
+.sb h4{font-size:12px;font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;}
+.sb ul{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.sb ul li{font-size:13px;color:#a0a0c0;padding-left:14px;position:relative;line-height:1.5;}
+.sb ul li::before{content:'→';position:absolute;left:0;color:var(--muted);font-size:11px;}
+.ir{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px;}
+@media(max-width:600px){.ir{grid-template-columns:1fr;}}
+.ib{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;padding:14px 16px;text-align:center;}
+.ibl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.ibv{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);}
+.vcard{background:var(--code-bg);border:1px solid var(--border);border-radius:6px;margin-bottom:12px;overflow:hidden;}
+.vtoggle{width:100%;background:none;border:none;cursor:pointer;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;text-align:left;}
+.vtoggle:hover{background:rgba(255,255,255,0.02);}
+.vname{font-size:14px;font-weight:700;color:var(--text);}
+.vbadge{font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:3px;margin-left:10px;background:rgba(255,215,0,0.1);color:#ffd700;border:1px solid rgba(255,215,0,0.3);}
+.vchev{color:var(--muted);transition:transform 0.25s;font-size:14px;}
+.vcard.open .vchev{transform:rotate(180deg);}
+.vbody{display:none;border-top:1px solid var(--border);padding:16px 18px;}
+.vcard.open .vbody{display:block;}
+.vdesc{font-size:13px;color:#a0a0c0;line-height:1.6;margin-bottom:14px;}
+.cb{background:#080810;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-top:10px;}
+.ch{display:flex;justify-content:space-between;align-items:center;padding:8px 14px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);}
+.cl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.cpb{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border:1px solid var(--border-bright);border-radius:3px;background:none;color:var(--muted);cursor:pointer;transition:all 0.15s;}
+.cpb:hover{color:var(--text);border-color:var(--accent);}
+.cpb.copied{color:var(--accent3);border-color:var(--accent3);}
+pre{padding:18px;overflow-x:auto;font-family:'JetBrains Mono',monospace;font-size:12.5px;line-height:1.7;color:#c8c8e0;}
+.kw{color:#7c6af7;}.type{color:#00d4ff;}.str{color:#a8ff78;}.num{color:#ffd700;}.cmt{color:#4a4a6a;font-style:italic;}.fn{color:#ff9f43;}
+.dg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:600px){.dg{grid-template-columns:1fr;}}
+.db{border-radius:6px;padding:14px 16px;border:1px solid;}
+.db.prefer{background:rgba(106,247,200,0.04);border-color:rgba(106,247,200,0.2);}
+.db.instead{background:rgba(247,106,106,0.04);border-color:rgba(247,106,106,0.2);}
+.db h4{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+.db.prefer h4{color:var(--accent3);}
+.db.instead h4{color:var(--accent4);}
+.db ul{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.db ul li{font-size:12.5px;color:#a0a0c0;padding-left:16px;position:relative;line-height:1.5;}
+.db.prefer ul li::before{content:'✓';position:absolute;left:0;color:var(--accent3);}
+.db.instead ul li::before{content:'→';position:absolute;left:0;color:var(--accent4);}
+.tb{background:rgba(124,106,247,0.05);border:1px solid rgba(124,106,247,0.25);border-radius:6px;padding:16px 18px;}
+.tb h4{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.ti{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:#a0a0c0;margin-bottom:6px;line-height:1.5;}
+.ti span:first-child{color:var(--accent);font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.pg{display:flex;flex-wrap:wrap;gap:8px;}
+.pt{font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 12px;border-radius:4px;background:rgba(255,255,255,0.04);border:1px solid var(--border-bright);color:#a0a0c0;}
+.legend{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:32px;padding:14px 18px;background:var(--surface);border:1px solid var(--border);border-radius:6px;}
+.li{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);}
+.ld{width:8px;height:8px;border-radius:50%;}
+.scroll-top{position:fixed;bottom:24px;right:24px;width:40px;height:40px;background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.3s;color:var(--muted);font-size:18px;z-index:100;}
+.scroll-top.visible{opacity:1;}
+.scroll-top:hover{color:var(--text);}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+<header>
+  <div class="eyebrow">// Google L4 Interview Prep</div>
+  <h1>DSA Patterns<br>Learning Guide</h1>
+  <p>14 algorithmic patterns in optimal learning order — each with C# templates, variants, signal keywords, and decision frameworks for when to switch strategies.</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-val">14</div><div class="stat-label">Patterns</div></div>
+    <div class="stat"><div class="stat-val">5</div><div class="stat-label">Phases</div></div>
+    <div class="stat"><div class="stat-val">~70%</div><div class="stat-label">Google L4 Coverage</div></div>
+    <div class="stat"><div class="stat-val">6 wk</div><div class="stat-label">Recommended</div></div>
+  </div>
+</header>
+<div class="legend">
+  <div class="li"><div class="ld" style="background:#6af7c8"></div>Use This Pattern</div>
+  <div class="li"><div class="ld" style="background:#f76a6a"></div>Prefer Another Instead</div>
+  <div class="li"><div class="ld" style="background:#7c6af7"></div>How to Pivot Thinking</div>
+  <div class="li"><div class="ld" style="background:#ffd700"></div>Variant</div>
+</div>
+
+<div class="phase-header">
+  <span class="phase-badge">Phase 1</span>
+  <span class="phase-title">Core Linear Patterns — Weeks 1–2</span>
+  <div class="phase-line"></div>
+</div><div class="card" id="p1">
+<button class="card-toggle" onclick="tc('p1')">
+  <div class="tl">
+    <div class="num" style="color:#dda0dd;border-color:#dda0dd">01</div>
+    <div><div class="pname">Prefix Sum</div><div class="psub">Build once, query O(1) — cumulative sums eliminate repeated work</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(n) build</span><span class="tag">O(1) query</span><span class="tag">O(n) space</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Build Time</div><div class="ibv">O(n)</div></div><div class="ib"><div class="ibl">Query Time</div><div class="ibv">O(1)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(n)</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Multiple range sum queries on the same static array</li><li>Subarray sum equals K — extremely common interview problem</li><li>2D grid rectangle sum queries</li><li>Subarrays with sum divisible by K (modulo prefix)</li><li>Any problem where you need accumulated information from index 0</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Array is modified after build → Segment Tree or BIT</li><li>Only a single query needed → just iterate once</li><li>Need maximum subarray sum → Kadane's Algorithm</li><li>Sliding window of fixed length → Sliding Window pattern</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p1-v1">
+<button class="vtoggle" onclick="tv('p1-v1')"><span class="vname">1D Range Sum Query<span class="vbadge">Foundational</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Build prefix[i] = sum of nums[0..i-1]. Range sum [l,r] = prefix[r+1] - prefix[l] in O(1). Always initialize prefix[0] = 0 as the empty-prefix base case.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public class</span> <span class="type">NumArray</span>
+{
+    <span class="kw">private readonly int</span>[] _prefix;
+
+    <span class="kw">public</span> <span class="fn">NumArray</span>(<span class="kw">int</span>[] nums)
+    {
+        _prefix = <span class="kw">new int</span>[nums.Length + <span class="num">1</span>];
+        <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; nums.Length; i++)
+            _prefix[i + <span class="num">1</span>] = _prefix[i] + nums[i];
+    }
+
+    <span class="cmt">// O(1): sum from index left to right inclusive</span>
+    <span class="kw">public int</span> <span class="fn">SumRange</span>(<span class="kw">int</span> left, <span class="kw">int</span> right)
+        =&gt; _prefix[right + <span class="num">1</span>] - _prefix[left];
+}</pre></div></div>
+</div><div class="vcard" id="p1-v2">
+<button class="vtoggle" onclick="tv('p1-v2')"><span class="vname">Subarray Sum = K (HashMap)<span class="vbadge">Most Common</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Don't store the prefix array. Use a HashMap of seen prefix sums. When you reach index i with currentSum, check if (currentSum - k) was seen. If so, there's a subarray ending at i with sum k. Handles negatives perfectly.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">SubarraySum</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> k)
+{
+    <span class="kw">var</span> prefixCount = <span class="kw">new</span> <span class="type">Dictionary</span>&lt;<span class="kw">int</span>, <span class="kw">int</span>&gt;();
+    prefixCount[<span class="num">0</span>] = <span class="num">1</span>; <span class="cmt">// empty prefix (sum=0 seen once)</span>
+    <span class="kw">int</span> curr = <span class="num">0</span>, count = <span class="num">0</span>;
+
+    <span class="kw">foreach</span> (<span class="kw">int</span> num <span class="kw">in</span> nums)
+    {
+        curr += num;
+        <span class="cmt">// subarrays ending here with sum k</span>
+        count += prefixCount.<span class="fn">GetValueOrDefault</span>(curr - k, <span class="num">0</span>);
+        prefixCount[curr] = prefixCount.<span class="fn">GetValueOrDefault</span>(curr, <span class="num">0</span>) + <span class="num">1</span>;
+    }
+    <span class="kw">return</span> count;
+}</pre></div></div>
+</div><div class="vcard" id="p1-v3">
+<button class="vtoggle" onclick="tv('p1-v3')"><span class="vname">2D Prefix Sum</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Extend 1D to 2D. Query any rectangle with inclusion-exclusion formula. Build is O(m*n), each query is O(1). Memorize the formula: p[r2+1][c2+1] - p[r1][c2+1] - p[r2+1][c1] + p[r1][c1].</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public class</span> <span class="type">NumMatrix</span>
+{
+    <span class="kw">private readonly int</span>[,] _p;
+    <span class="kw">public</span> <span class="fn">NumMatrix</span>(<span class="kw">int</span>[][] m)
+    {
+        <span class="kw">int</span> R = m.Length, C = m[<span class="num">0</span>].Length;
+        _p = <span class="kw">new int</span>[R+<span class="num">1</span>, C+<span class="num">1</span>];
+        <span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">1</span>; r&lt;=R; r++)
+        <span class="kw">for</span> (<span class="kw">int</span> c=<span class="num">1</span>; c&lt;=C; c++)
+            _p[r,c] = m[r-<span class="num">1</span>][c-<span class="num">1</span>]+_p[r-<span class="num">1</span>,c]+_p[r,c-<span class="num">1</span>]-_p[r-<span class="num">1</span>,c-<span class="num">1</span>];
+    }
+    <span class="kw">public int</span> <span class="fn">SumRegion</span>(<span class="kw">int</span> r1,<span class="kw">int</span> c1,<span class="kw">int</span> r2,<span class="kw">int</span> c2)
+        =&gt; _p[r2+<span class="num">1</span>,c2+<span class="num">1</span>]-_p[r1,c2+<span class="num">1</span>]-_p[r2+<span class="num">1</span>,c1]+_p[r1,c1];
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Multiple range queries on static array</li><li>Count subarrays where sum = k exactly</li><li>Subarrays divisible by k (prefix % k trick)</li><li>2D rectangle sum queries</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Array changes → Binary Indexed Tree or Segment Tree</li><li>Max subarray sum → Kadane's Algorithm</li><li>Fixed-length window → Sliding Window</li><li>Single query → just iterate</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Does the array change? → BIT for point updates, Segment Tree for range updates — both support O(log n) modifications.</span></div><div class="ti"><span>Q2</span><span>Is the window fixed-length? → Sliding Window handles it in O(1) space without building a prefix array.</span></div><div class="ti"><span>Q3</span><span>Need the longest/shortest subarray satisfying a condition? → Two Pointers or Sliding Window + condition tracking.</span></div><div class="ti"><span>Q4</span><span>2D grid with connectivity or path queries? → BFS/DFS, not prefix sum.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">303. Range Sum Query</span><span class="pt">304. Range Sum 2D</span><span class="pt">560. Subarray Sum = K</span><span class="pt">525. Contiguous Array</span><span class="pt">974. Subarray Sums Divisible by K</span><span class="pt">1480. Running Sum</span></div></div>
+</div></div>
+</div><div class="card" id="p2">
+<button class="card-toggle" onclick="tc('p2')">
+  <div class="tl">
+    <div class="num" style="color:#00d4ff;border-color:#00d4ff">02</div>
+    <div><div class="pname">Sliding Window</div><div class="psub">Avoid recomputing overlapping subarrays — O(n) instead of O(n²)</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(n)</span><span class="tag">O(1)–O(k) space</span><span class="tag">contiguous only</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(n)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(1) or O(k)</div></div><div class="ib"><div class="ibl">Data</div><div class="ibv">Array / String</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Subarray or substring of fixed size k</li><li>Longest subarray/substring satisfying a condition</li><li>Minimum window containing all required elements</li><li>Contiguous elements only — not subsequences</li><li>Optimize a property (sum, distinct count) over all windows</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Non-contiguous subsequences → Two Pointers or DP</li><li>Need prefix sums across multiple queries → Prefix Sum + HashMap</li><li>All pairs not just adjacent → Two Pointers</li><li>Need max/min inside each window → add Monotonic Deque</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p2-v1">
+<button class="vtoggle" onclick="tv('p2-v1')"><span class="vname">Fixed Size Window<span class="vbadge">Start Here</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Window size k is constant. Compute the first window, then slide: add the right element, subtract the left element. O(1) per step after initialization.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">MaxSumFixed</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> k)
+{
+    <span class="kw">int</span> windowSum = <span class="num">0</span>, maxSum = <span class="kw">int</span>.MinValue;
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; nums.Length; i++)
+    {
+        windowSum += nums[i];
+
+        <span class="kw">if</span> (i &gt;= k - <span class="num">1</span>)
+        {
+            maxSum = <span class="type">Math</span>.<span class="fn">Max</span>(maxSum, windowSum);
+            windowSum -= nums[i - k + <span class="num">1</span>]; <span class="cmt">// remove oldest element</span>
+        }
+    }
+    <span class="kw">return</span> maxSum;
+}</pre></div></div>
+</div><div class="vcard" id="p2-v2">
+<button class="vtoggle" onclick="tv('p2-v2')"><span class="vname">Variable Window — Longest Valid</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Find the longest window satisfying a condition. Expand right unconditionally. Shrink left only when the condition is violated. Track max length at each valid state.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">LengthOfLongestSubstring</span>(<span class="kw">string</span> s)
+{
+    <span class="kw">var</span> seen = <span class="kw">new</span> <span class="type">Dictionary</span>&lt;<span class="kw">char</span>, <span class="kw">int</span>&gt;(); <span class="cmt">// char → last index</span>
+    <span class="kw">int</span> left = <span class="num">0</span>, maxLen = <span class="num">0</span>;
+
+    <span class="kw">for</span> (<span class="kw">int</span> right = <span class="num">0</span>; right &lt; s.Length; right++)
+    {
+        <span class="kw">char</span> c = s[right];
+        <span class="cmt">// if char seen inside current window, jump left past it</span>
+        <span class="kw">if</span> (seen.<span class="fn">TryGetValue</span>(c, <span class="kw">out int</span> last) &amp;&amp; last &gt;= left)
+            left = last + <span class="num">1</span>;
+
+        seen[c] = right;
+        maxLen = <span class="type">Math</span>.<span class="fn">Max</span>(maxLen, right - left + <span class="num">1</span>);
+    }
+    <span class="kw">return</span> maxLen;
+}</pre></div></div>
+</div><div class="vcard" id="p2-v3">
+<button class="vtoggle" onclick="tv('p2-v3')"><span class="vname">Variable Window — Minimum Window<span class="vbadge">Most Powerful</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Expand right until satisfied, then shrink left as far as possible while still satisfied. Record minimum at each valid state. Classic: Minimum Window Substring.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public string</span> <span class="fn">MinWindow</span>(<span class="kw">string</span> s, <span class="kw">string</span> t)
+{
+    <span class="kw">var</span> need = <span class="kw">new</span> <span class="type">Dictionary</span>&lt;<span class="kw">char</span>, <span class="kw">int</span>&gt;();
+    <span class="kw">foreach</span> (<span class="kw">char</span> c <span class="kw">in</span> t) need[c] = need.<span class="fn">GetValueOrDefault</span>(c) + <span class="num">1</span>;
+
+    <span class="kw">int</span> left=<span class="num">0</span>, formed=<span class="num">0</span>, required=need.Count, minLen=<span class="kw">int</span>.MaxValue, minL=<span class="num">0</span>;
+    <span class="kw">var</span> window = <span class="kw">new</span> <span class="type">Dictionary</span>&lt;<span class="kw">char</span>, <span class="kw">int</span>&gt;();
+
+    <span class="kw">for</span> (<span class="kw">int</span> r = <span class="num">0</span>; r &lt; s.Length; r++)
+    {
+        <span class="kw">char</span> c = s[r];
+        window[c] = window.<span class="fn">GetValueOrDefault</span>(c) + <span class="num">1</span>;
+        <span class="kw">if</span> (need.<span class="fn">ContainsKey</span>(c) &amp;&amp; window[c] == need[c]) formed++;
+
+        <span class="kw">while</span> (formed == required)
+        {
+            <span class="kw">if</span> (r - left + <span class="num">1</span> &lt; minLen) { minLen = r - left + <span class="num">1</span>; minL = left; }
+            <span class="kw">char</span> lc = s[left++];
+            window[lc]--;
+            <span class="kw">if</span> (need.<span class="fn">ContainsKey</span>(lc) &amp;&amp; window[lc] &lt; need[lc]) formed--;
+        }
+    }
+    <span class="kw">return</span> minLen == <span class="kw">int</span>.MaxValue ? <span class="str">""</span> : s.<span class="fn">Substring</span>(minL, minLen);
+}</pre></div></div>
+</div><div class="vcard" id="p2-v4">
+<button class="vtoggle" onclick="tv('p2-v4')"><span class="vname">Window + Deque (Max/Min per Window)</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Track the maximum or minimum inside a sliding window using a monotonic deque (LinkedList). Deque stores indices in decreasing value order for max. Each element enters and leaves the deque exactly once: O(n) total.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span>[] <span class="fn">MaxSlidingWindow</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> k)
+{
+    <span class="kw">var</span> res = <span class="kw">new int</span>[nums.Length - k + <span class="num">1</span>];
+    <span class="kw">var</span> dq = <span class="kw">new</span> <span class="type">LinkedList</span>&lt;<span class="kw">int</span>&gt;(); <span class="cmt">// indices, decreasing values</span>
+    <span class="kw">int</span> ri = <span class="num">0</span>;
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; nums.Length; i++)
+    {
+        <span class="cmt">// remove indices outside window</span>
+        <span class="kw">while</span> (dq.Count &gt; <span class="num">0</span> &amp;&amp; dq.First.Value &lt; i - k + <span class="num">1</span>)
+            dq.<span class="fn">RemoveFirst</span>();
+        <span class="cmt">// maintain decreasing order</span>
+        <span class="kw">while</span> (dq.Count &gt; <span class="num">0</span> &amp;&amp; nums[dq.Last.Value] &lt; nums[i])
+            dq.<span class="fn">RemoveLast</span>();
+        dq.<span class="fn">AddLast</span>(i);
+        <span class="kw">if</span> (i &gt;= k - <span class="num">1</span>) res[ri++] = nums[dq.First.Value];
+    }
+    <span class="kw">return</span> res;
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Subarray/substring must be contiguous</li><li>Fixed window: sum/average of every k elements</li><li>Variable window: longest with at most k distinct chars</li><li>Minimum window enclosing all required chars</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Non-contiguous subsequences → Two Pointers or DP</li><li>Need prefix sum info across queries → Prefix Sum + HashMap</li><li>Negative numbers + max subarray → Kadane's (negatives break shrink monotonicity)</li><li>All subarrays of exactly k length with count → at-most-k trick + Prefix Sum</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Non-contiguous elements? → Two Pointers (sorted) or DP (subsequences). Key difference: sliding window is one contiguous segment; Two Pointers has two independent cursors.</span></div><div class="ti"><span>Q2</span><span>Need count of subarrays? → Use the 'at most k' trick: answer(k) - answer(k-1) = exactly k subarrays. Combine with prefix sum HashMap.</span></div><div class="ti"><span>Q3</span><span>Negative numbers and need max sum? → Kadane's Algorithm. Negatives break the expand/shrink monotonicity that sliding window relies on.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">643. Max Avg Subarray I</span><span class="pt">3. Longest No-Repeat Substring</span><span class="pt">76. Minimum Window Substring</span><span class="pt">424. Longest Repeating Replacement</span><span class="pt">239. Sliding Window Maximum</span><span class="pt">1004. Max Consecutive Ones III</span></div></div>
+</div></div>
+</div><div class="card" id="p3">
+<button class="card-toggle" onclick="tc('p3')">
+  <div class="tl">
+    <div class="num" style="color:#ff6b6b;border-color:#ff6b6b">03</div>
+    <div><div class="pname">Two Pointers</div><div class="psub">Eliminate nested loops — two indices moving intelligently through sorted data</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(n)</span><span class="tag">O(1) space</span><span class="tag">sorted or partitioned</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(n) or O(n log n)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(1)</div></div><div class="ib"><div class="ibl">Requires</div><div class="ibv">Sorted or partitioned</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Sorted array — find pairs/triplets summing to target</li><li>Palindrome checks or reversal</li><li>In-place partition (move zeros, Dutch Flag)</li><li>Remove duplicates from sorted array</li><li>Merging two sorted arrays</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Unsorted array where sorting loses index info → HashMap</li><li>Contiguous subarray needed → Sliding Window</li><li>Working with a linked list → Fast & Slow Pointers</li><li>Need count of all subarrays → Prefix Sum + HashMap</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p3-v1">
+<button class="vtoggle" onclick="tv('p3-v1')"><span class="vname">Left-Right (Opposite Direction)<span class="vbadge">Most Common</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Pointers start at opposite ends, move toward center. The sorted property tells you which direction to move: if sum is too small, advance left; if too large, advance right. Works for two-sum on sorted arrays, container with most water, palindrome check.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span>[] <span class="fn">TwoSum</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> target)
+{
+    <span class="kw">int</span> left = <span class="num">0</span>, right = nums.Length - <span class="num">1</span>;
+    <span class="kw">while</span> (left &lt; right)
+    {
+        <span class="kw">int</span> sum = nums[left] + nums[right];
+        <span class="kw">if</span>      (sum == target) <span class="kw">return new</span>[] { left+<span class="num">1</span>, right+<span class="num">1</span> };
+        <span class="kw">else if</span> (sum &lt; target)  left++;
+        <span class="kw">else</span>                    right--;
+    }
+    <span class="kw">return new</span>[] { -<span class="num">1</span>, -<span class="num">1</span> };
+}</pre></div></div>
+</div><div class="vcard" id="p3-v2">
+<button class="vtoggle" onclick="tv('p3-v2')"><span class="vname">Three Sum / K-Sum</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Fix one element with a loop, apply two-pointer on the remaining sorted subarray. Skip duplicates at both the fixed index and after each match. Pattern generalizes: 4Sum fixes two outer elements.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public</span> <span class="type">IList</span>&lt;<span class="type">IList</span>&lt;<span class="kw">int</span>&gt;&gt; <span class="fn">ThreeSum</span>(<span class="kw">int</span>[] nums)
+{
+    <span class="type">Array</span>.<span class="fn">Sort</span>(nums);
+    <span class="kw">var</span> res = <span class="kw">new</span> <span class="type">List</span>&lt;<span class="type">IList</span>&lt;<span class="kw">int</span>&gt;&gt;();
+
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; nums.Length - <span class="num">2</span>; i++)
+    {
+        <span class="kw">if</span> (i &gt; <span class="num">0</span> &amp;&amp; nums[i] == nums[i-<span class="num">1</span>]) <span class="kw">continue</span>; <span class="cmt">// skip dup fixed</span>
+        <span class="kw">int</span> l = i+<span class="num">1</span>, r = nums.Length-<span class="num">1</span>;
+        <span class="kw">while</span> (l &lt; r)
+        {
+            <span class="kw">int</span> sum = nums[i]+nums[l]+nums[r];
+            <span class="kw">if</span> (sum == <span class="num">0</span>)
+            {
+                res.<span class="fn">Add</span>(<span class="kw">new</span>[] {nums[i],nums[l],nums[r]});
+                <span class="kw">while</span> (l&lt;r &amp;&amp; nums[l]==nums[l+<span class="num">1</span>]) l++;
+                <span class="kw">while</span> (l&lt;r &amp;&amp; nums[r]==nums[r-<span class="num">1</span>]) r--;
+                l++; r--;
+            }
+            <span class="kw">else if</span> (sum &lt; <span class="num">0</span>) l++;
+            <span class="kw">else</span>            r--;
+        }
+    }
+    <span class="kw">return</span> res;
+}</pre></div></div>
+</div><div class="vcard" id="p3-v3">
+<button class="vtoggle" onclick="tv('p3-v3')"><span class="vname">Same Direction (Slow-Fast Partition)</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Both pointers start at the same end. Slow marks the write position, fast scans ahead. Used for in-place manipulation: remove duplicates, move zeros, Dutch National Flag (3-way partition).</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Move Zeros — slow = write pos, fast = scanner</span>
+<span class="kw">public void</span> <span class="fn">MoveZeroes</span>(<span class="kw">int</span>[] nums)
+{
+    <span class="kw">int</span> slow = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> fast = <span class="num">0</span>; fast &lt; nums.Length; fast++)
+        <span class="kw">if</span> (nums[fast] != <span class="num">0</span>) nums[slow++] = nums[fast];
+    <span class="kw">while</span> (slow &lt; nums.Length) nums[slow++] = <span class="num">0</span>;
+}
+
+<span class="cmt">// Dutch National Flag (sort 0s, 1s, 2s) — 3 pointers</span>
+<span class="kw">public void</span> <span class="fn">SortColors</span>(<span class="kw">int</span>[] nums)
+{
+    <span class="kw">int</span> lo = <span class="num">0</span>, mid = <span class="num">0</span>, hi = nums.Length - <span class="num">1</span>;
+    <span class="kw">while</span> (mid &lt;= hi)
+    {
+        <span class="kw">if</span>      (nums[mid] == <span class="num">0</span>) (nums[lo++], nums[mid++]) = (nums[mid], nums[lo]);
+        <span class="kw">else if</span> (nums[mid] == <span class="num">1</span>) mid++;
+        <span class="kw">else</span>                     (nums[mid], nums[hi--]) = (nums[hi], nums[mid]);
+    }
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Input is sorted or can be sorted without losing needed info</li><li>Looking for pairs/triplets summing to target</li><li>In-place partition or duplicate removal needed</li><li>Palindrome verification or two-end squeeze</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Need original indices → use HashMap instead of sorting</li><li>Contiguous subarray → Sliding Window</li><li>Linked list → Fast & Slow Pointers (no random access)</li><li>All pairs including non-adjacent → nested loop or Prefix Sum</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Array not sorted and sorting loses info? → HashMap complement lookup. Two Sum I solves in O(n) with no sorting.</span></div><div class="ti"><span>Q2</span><span>About contiguous windows, not pairs? → Sliding Window. Key difference: window is one segment; two pointers are two independent cursors squeezing.</span></div><div class="ti"><span>Q3</span><span>Linked list? → Fast & Slow Pointers adapts two-pointer for structures with no random access.</span></div><div class="ti"><span>Q4</span><span>3Sum but duplicates in output are OK? → No need to skip duplicate fixed element. Simplifies significantly.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">167. Two Sum II</span><span class="pt">125. Valid Palindrome</span><span class="pt">15. Three Sum</span><span class="pt">11. Container With Most Water</span><span class="pt">26. Remove Duplicates</span><span class="pt">75. Sort Colors</span><span class="pt">42. Trapping Rain Water</span></div></div>
+</div></div>
+</div><div class="card" id="p4">
+<button class="card-toggle" onclick="tc('p4')">
+  <div class="tl">
+    <div class="num" style="color:#a8ff78;border-color:#a8ff78">04</div>
+    <div><div class="pname">Fast & Slow Pointers</div><div class="psub">Floyd's algorithm — detect cycles and find midpoints in linked structures</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(n)</span><span class="tag">O(1) space</span><span class="tag">linked list / cycle</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(n)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(1)</div></div><div class="ib"><div class="ibl">Structure</div><div class="ibv">Linked List / Sequence</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Detect cycle in linked list</li><li>Find start/entry point of a cycle</li><li>Find middle of linked list in one pass</li><li>Kth node from end without counting length first</li><li>Happy Number — detect cycle in integer sequence</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Array with random access → two-pointer is simpler</li><li>Graph cycle detection → DFS with 3-color marking</li><li>Tree middle → BFS level-order is cleaner</li><li>Need cycle length explicitly → count steps between meetings</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p4-v1">
+<button class="vtoggle" onclick="tv('p4-v1')"><span class="vname">Cycle Detection (Floyd's)<span class="vbadge">Master This</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Slow moves 1 step, fast moves 2. Meeting point proves a cycle. To find cycle entry: reset slow to head, advance both 1 step at a time — they meet exactly at the cycle's entry node. Mathematical proof uses modular arithmetic on cycle lengths.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Phase 1: detect. Phase 2: find entry.</span>
+<span class="kw">public</span> <span class="type">ListNode</span> <span class="fn">DetectCycle</span>(<span class="type">ListNode</span> head)
+{
+    <span class="type">ListNode</span> slow = head, fast = head;
+
+    <span class="kw">while</span> (fast != <span class="kw">null</span> &amp;&amp; fast.next != <span class="kw">null</span>)
+    {
+        slow = slow.next;
+        fast = fast.next.next;
+        <span class="kw">if</span> (slow == fast) <span class="kw">break</span>;
+    }
+
+    <span class="kw">if</span> (fast == <span class="kw">null</span> || fast.next == <span class="kw">null</span>) <span class="kw">return null</span>;
+
+    <span class="cmt">// Reset slow to head; advance both 1 step</span>
+    slow = head;
+    <span class="kw">while</span> (slow != fast) { slow = slow.next; fast = fast.next; }
+    <span class="kw">return</span> slow; <span class="cmt">// cycle entry node</span>
+}</pre></div></div>
+</div><div class="vcard" id="p4-v2">
+<button class="vtoggle" onclick="tv('p4-v2')"><span class="vname">Find Middle + Kth From End</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">When fast reaches the end, slow is at the middle. For kth-from-end: advance fast k steps first, then move both together — when fast hits null, slow is at the kth node from end. O(n) single pass.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public</span> <span class="type">ListNode</span> <span class="fn">MiddleNode</span>(<span class="type">ListNode</span> head)
+{
+    <span class="type">ListNode</span> slow = head, fast = head;
+    <span class="kw">while</span> (fast != <span class="kw">null</span> &amp;&amp; fast.next != <span class="kw">null</span>)
+    {
+        slow = slow.next;
+        fast = fast.next.next;
+    }
+    <span class="kw">return</span> slow; <span class="cmt">// second middle for even-length lists</span>
+}
+
+<span class="cmt">// Kth from end: move fast k steps ahead first</span>
+<span class="kw">public</span> <span class="type">ListNode</span> <span class="fn">KthFromEnd</span>(<span class="type">ListNode</span> head, <span class="kw">int</span> k)
+{
+    <span class="type">ListNode</span> slow = head, fast = head;
+    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; k; i++) fast = fast.next;
+    <span class="kw">while</span> (fast != <span class="kw">null</span>) { slow = slow.next; fast = fast.next; }
+    <span class="kw">return</span> slow;
+}</pre></div></div>
+</div><div class="vcard" id="p4-v3">
+<button class="vtoggle" onclick="tv('p4-v3')"><span class="vname">Happy Number (Sequence Cycle)</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Apply Floyd's cycle detection where the 'next pointer' is replaced by the digit-square-sum function f(n). If the sequence reaches 1, it's happy. If slow meets fast before reaching 1, there's a loop and it's not happy. No HashSet needed.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public bool</span> <span class="fn">IsHappy</span>(<span class="kw">int</span> n)
+{
+    <span class="kw">int</span> slow = n, fast = <span class="fn">Next</span>(n);
+    <span class="kw">while</span> (fast != <span class="num">1</span> &amp;&amp; slow != fast)
+    {
+        slow = <span class="fn">Next</span>(slow);
+        fast = <span class="fn">Next</span>(<span class="fn">Next</span>(fast));
+    }
+    <span class="kw">return</span> fast == <span class="num">1</span>;
+}
+
+<span class="kw">int</span> <span class="fn">Next</span>(<span class="kw">int</span> n)
+{
+    <span class="kw">int</span> sum = <span class="num">0</span>;
+    <span class="kw">while</span> (n &gt; <span class="num">0</span>) { <span class="kw">int</span> d = n % <span class="num">10</span>; sum += d*d; n /= <span class="num">10</span>; }
+    <span class="kw">return</span> sum;
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Linked list cycle detection in O(1) space</li><li>Find middle without computing length first</li><li>Kth from end in one pass</li><li>Sequence cycle in integer problems</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Graph cycle → DFS with 3 colors (white/gray/black)</li><li>Directed graph → Topological Sort (Kahn's detects cycles)</li><li>Array cycle detection → visited set or index negation trick</li><li>Need cycle length → count steps between slow and fast meeting</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Graph (not linked list) cycles? → DFS with visited states. Fast & Slow only works when there's a well-defined 'next pointer', not an adjacency list.</span></div><div class="ti"><span>Q2</span><span>Cycle in a directed graph for dependency resolution? → Topological Sort (Kahn's algorithm) — it naturally detects cycles when the result count < n.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">876. Middle of Linked List</span><span class="pt">141. Linked List Cycle</span><span class="pt">142. Linked List Cycle II</span><span class="pt">202. Happy Number</span><span class="pt">19. Remove Nth from End</span><span class="pt">234. Palindrome Linked List</span></div></div>
+</div></div>
+</div>
+<div class="phase-header">
+  <span class="phase-badge">Phase 2</span>
+  <span class="phase-title">Search & Divide — Weeks 2–3</span>
+  <div class="phase-line"></div>
+</div><div class="card" id="p5">
+<button class="card-toggle" onclick="tc('p5')">
+  <div class="tl">
+    <div class="num" style="color:#ffd700;border-color:#ffd700">05</div>
+    <div><div class="pname">Binary Search</div><div class="psub">Halve the search space each step — O(log n) on sorted or monotonic conditions</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(log n)</span><span class="tag">O(1) space</span><span class="tag">sorted / monotonic</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(log n)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(1)</div></div><div class="ib"><div class="ibl">Requires</div><div class="ibv">Sorted or monotonic property</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Sorted array — find an element or its position</li><li>Find first/last position satisfying a condition</li><li>Rotated sorted array search</li><li>Minimize/maximize with a feasibility function (binary search on answer)</li><li>Any problem where brute force is O(n) and the answer space is monotonic</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Unsorted with no monotonic property → HashMap or linear scan</li><li>Need all occurrences (use upper/lower bound difference)</li><li>2D matrix with complex layout → BFS or row/column binary search</li><li>Feasibility function is not monotonic → DP</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p5-v1">
+<button class="vtoggle" onclick="tv('p5-v1')"><span class="vname">Classic Binary Search<span class="vbadge">Memorize Template</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">The universal template: left=0, right=n-1, while left≤right. Compute mid safely with left+(right-left)/2. This avoids integer overflow. For first/last position use the lower-bound variant with half-open interval.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Exact match — classic template</span>
+<span class="kw">public int</span> <span class="fn">BinarySearch</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> target)
+{
+    <span class="kw">int</span> left = <span class="num">0</span>, right = nums.Length - <span class="num">1</span>;
+    <span class="kw">while</span> (left &lt;= right)
+    {
+        <span class="kw">int</span> mid = left + (right - left) / <span class="num">2</span>; <span class="cmt">// overflow-safe</span>
+        <span class="kw">if</span>      (nums[mid] == target) <span class="kw">return</span> mid;
+        <span class="kw">else if</span> (nums[mid] &lt; target)  left  = mid + <span class="num">1</span>;
+        <span class="kw">else</span>                          right = mid - <span class="num">1</span>;
+    }
+    <span class="kw">return</span> -<span class="num">1</span>;
+}
+
+<span class="cmt">// First position ≥ target (lower bound)</span>
+<span class="kw">public int</span> <span class="fn">LowerBound</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> target)
+{
+    <span class="kw">int</span> left = <span class="num">0</span>, right = nums.Length; <span class="cmt">// half-open [0, n)</span>
+    <span class="kw">while</span> (left &lt; right)
+    {
+        <span class="kw">int</span> mid = left + (right - left) / <span class="num">2</span>;
+        <span class="kw">if</span> (nums[mid] &lt; target) left = mid + <span class="num">1</span>;
+        <span class="kw">else</span>                    right = mid;
+    }
+    <span class="kw">return</span> left; <span class="cmt">// first index where nums[i] &gt;= target</span>
+}</pre></div></div>
+</div><div class="vcard" id="p5-v2">
+<button class="vtoggle" onclick="tv('p5-v2')"><span class="vname">Rotated Sorted Array</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Even after rotation, one half is always sorted. Check which half is sorted by comparing mid to left. Then check if target falls in the sorted half — if yes, search there; otherwise search the other half.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">SearchRotated</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> target)
+{
+    <span class="kw">int</span> left = <span class="num">0</span>, right = nums.Length - <span class="num">1</span>;
+    <span class="kw">while</span> (left &lt;= right)
+    {
+        <span class="kw">int</span> mid = left + (right - left) / <span class="num">2</span>;
+        <span class="kw">if</span> (nums[mid] == target) <span class="kw">return</span> mid;
+
+        <span class="kw">if</span> (nums[left] &lt;= nums[mid]) <span class="cmt">// left half is sorted</span>
+        {
+            <span class="kw">if</span> (nums[left] &lt;= target &amp;&amp; target &lt; nums[mid]) right = mid - <span class="num">1</span>;
+            <span class="kw">else</span>                                               left  = mid + <span class="num">1</span>;
+        }
+        <span class="kw">else</span> <span class="cmt">// right half is sorted</span>
+        {
+            <span class="kw">if</span> (nums[mid] &lt; target &amp;&amp; target &lt;= nums[right]) left  = mid + <span class="num">1</span>;
+            <span class="kw">else</span>                                              right = mid - <span class="num">1</span>;
+        }
+    }
+    <span class="kw">return</span> -<span class="num">1</span>;
+}</pre></div></div>
+</div><div class="vcard" id="p5-v3">
+<button class="vtoggle" onclick="tv('p5-v3')"><span class="vname">Binary Search on Answer<span class="vbadge">Most Powerful</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">The array itself isn't sorted, but the answer space is monotonic. Binary search on the answer value. Define isOk(mid) as a feasibility function. Find minimum mid where isOk is true (or maximum where it's false). Template: left=minPossible, right=maxPossible, while left&lt;right.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Koko Eating Bananas — minimize eating speed</span>
+<span class="kw">public int</span> <span class="fn">MinEatingSpeed</span>(<span class="kw">int</span>[] piles, <span class="kw">int</span> h)
+{
+    <span class="kw">int</span> left = <span class="num">1</span>, right = piles.<span class="fn">Max</span>();
+
+    <span class="kw">while</span> (left &lt; right)
+    {
+        <span class="kw">int</span> mid = left + (right - left) / <span class="num">2</span>;
+        <span class="kw">if</span> (<span class="fn">CanFinish</span>(piles, mid, h)) right = mid;   <span class="cmt">// try smaller</span>
+        <span class="kw">else</span>                           left  = mid + <span class="num">1</span>;
+    }
+    <span class="kw">return</span> left;
+}
+
+<span class="kw">bool</span> <span class="fn">CanFinish</span>(<span class="kw">int</span>[] piles, <span class="kw">int</span> speed, <span class="kw">int</span> h)
+{
+    <span class="kw">int</span> hours = <span class="num">0</span>;
+    <span class="kw">foreach</span> (<span class="kw">int</span> p <span class="kw">in</span> piles)
+        hours += (p + speed - <span class="num">1</span>) / speed; <span class="cmt">// ceiling division</span>
+    <span class="kw">return</span> hours &lt;= h;
+}
+
+<span class="cmt">// Pattern: isOk is monotonic — once true, stays true.
+// Find minimum where isOk=true: use right=mid when ok, left=mid+1 when not.</span></pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Sorted input — O(log n) lookup</li><li>First/last position of an element</li><li>Minimize/maximize with monotonic feasibility function</li><li>Any problem where halving the search space is valid</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Unsorted, no monotonic property → HashMap or linear scan</li><li>2D matrix with row/col independence → binary search each row</li><li>No feasibility function boundary → DP or brute force</li><li>Feasibility function is O(n²) → total O(n² log n) might be too slow</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Array not sorted? Ask: is there a monotonic condition in the problem statement? 'Minimum X that satisfies Y' almost always means binary search on the answer even when the input array isn't sorted.</span></div><div class="ti"><span>Q2</span><span>Feasibility function too slow? Binary search on answer is only worthwhile if the feasibility check is O(n) or O(n log n). If it's O(n²), the total cost may exceed brute force.</span></div><div class="ti"><span>Q3</span><span>Need exact element positions? → Use lower_bound and upper_bound variants. Count occurrences as upper_bound - lower_bound.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">704. Binary Search</span><span class="pt">34. First and Last Position</span><span class="pt">33. Rotated Sorted Array</span><span class="pt">875. Koko Eating Bananas</span><span class="pt">1011. Ship Packages in D Days</span><span class="pt">410. Split Array Largest Sum</span><span class="pt">1231. Divide Chocolate</span></div></div>
+</div></div>
+</div>
+<div class="phase-header">
+  <span class="phase-badge">Phase 3</span>
+  <span class="phase-title">Graph Traversal — Weeks 3–4</span>
+  <div class="phase-line"></div>
+</div><div class="card" id="p6">
+<button class="card-toggle" onclick="tc('p6')">
+  <div class="tl">
+    <div class="num" style="color:#ff9f43;border-color:#ff9f43">06</div>
+    <div><div class="pname">BFS — Breadth-First Search</div><div class="psub">Level-by-level exploration — guarantees shortest path in unweighted graphs</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(V+E)</span><span class="tag">O(V) space</span><span class="tag">shortest path</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(V + E)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(V) queue</div></div><div class="ib"><div class="ibl">Guarantee</div><div class="ibv">Shortest (unweighted)</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Shortest path in unweighted graph or grid</li><li>Minimum steps/moves to reach target</li><li>Level-order traversal of a tree</li><li>Nearest X problems (rotten oranges, walls and gates)</li><li>Multi-source spreading — distances from all sources simultaneously</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Weighted edges → Dijkstra's (priority queue BFS)</li><li>Negative weights → Bellman-Ford</li><li>Just checking connectivity → DFS is simpler</li><li>All paths or combinations needed → DFS + backtracking</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p6-v1">
+<button class="vtoggle" onclick="tv('p6-v1')"><span class="vname">Standard BFS Template<span class="vbadge">Memorize This</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Queue-based. Enqueue start, mark visited. Loop: dequeue, process neighbors, enqueue unvisited. Track distance by level — capture queue.Count at the start of each level iteration.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">ShortestPath</span>(<span class="kw">int</span>[][] grid, (<span class="kw">int</span> r,<span class="kw">int</span> c) src, (<span class="kw">int</span> r,<span class="kw">int</span> c) dst)
+{
+    <span class="kw">int</span> m = grid.Length, n = grid[<span class="num">0</span>].Length;
+    <span class="kw">var</span> q = <span class="kw">new</span> <span class="type">Queue</span>&lt;(<span class="kw">int</span>,<span class="kw">int</span>)&gt;();
+    <span class="kw">var</span> vis = <span class="kw">new bool</span>[m, n];
+    <span class="kw">int</span>[] dr = {-<span class="num">1</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>}, dc = {<span class="num">0</span>,<span class="num">0</span>,-<span class="num">1</span>,<span class="num">1</span>};
+
+    q.<span class="fn">Enqueue</span>(src); vis[src.r,src.c] = <span class="kw">true</span>;
+    <span class="kw">int</span> steps = <span class="num">0</span>;
+
+    <span class="kw">while</span> (q.Count &gt; <span class="num">0</span>)
+    {
+        <span class="kw">int</span> size = q.Count; <span class="cmt">// process one full level</span>
+        <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; size; i++)
+        {
+            <span class="kw">var</span> (r,c) = q.<span class="fn">Dequeue</span>();
+            <span class="kw">if</span> ((r,c)==dst) <span class="kw">return</span> steps;
+            <span class="kw">for</span> (<span class="kw">int</span> d=<span class="num">0</span>; d&lt;<span class="num">4</span>; d++)
+            {
+                <span class="kw">int</span> nr=r+dr[d], nc=c+dc[d];
+                <span class="kw">if</span> (nr&gt;=<span class="num">0</span>&amp;&amp;nr&lt;m&amp;&amp;nc&gt;=<span class="num">0</span>&amp;&amp;nc&lt;n&amp;&amp;!vis[nr,nc]&amp;&amp;grid[nr][nc]!=<span class="num">1</span>)
+                { vis[nr,nc]=<span class="kw">true</span>; q.<span class="fn">Enqueue</span>((nr,nc)); }
+            }
+        }
+        steps++;
+    }
+    <span class="kw">return</span> -<span class="num">1</span>;
+}</pre></div></div>
+</div><div class="vcard" id="p6-v2">
+<button class="vtoggle" onclick="tv('p6-v2')"><span class="vname">Multi-Source BFS</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Start BFS from ALL source nodes simultaneously. Enqueue every source before the first iteration. The queue naturally spreads outward — each cell gets the distance from its nearest source. Classic: Rotten Oranges, 01 Matrix, Walls and Gates.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">OrangesRotting</span>(<span class="kw">int</span>[][] grid)
+{
+    <span class="kw">var</span> q = <span class="kw">new</span> <span class="type">Queue</span>&lt;(<span class="kw">int</span>,<span class="kw">int</span>)&gt;();
+    <span class="kw">int</span> fresh=<span class="num">0</span>, m=grid.Length, n=grid[<span class="num">0</span>].Length;
+
+    <span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">0</span>;r&lt;m;r++) <span class="kw">for</span> (<span class="kw">int</span> c=<span class="num">0</span>;c&lt;n;c++)
+    {
+        <span class="kw">if</span> (grid[r][c]==<span class="num">2</span>) q.<span class="fn">Enqueue</span>((r,c)); <span class="cmt">// all rotten = sources</span>
+        <span class="kw">if</span> (grid[r][c]==<span class="num">1</span>) fresh++;
+    }
+
+    <span class="kw">int</span>[] dr={-<span class="num">1</span>,<span class="num">1</span>,<span class="num">0</span>,<span class="num">0</span>}, dc={<span class="num">0</span>,<span class="num">0</span>,-<span class="num">1</span>,<span class="num">1</span>};
+    <span class="kw">int</span> minutes = <span class="num">0</span>;
+
+    <span class="kw">while</span> (q.Count&gt;<span class="num">0</span> &amp;&amp; fresh&gt;<span class="num">0</span>)
+    {
+        minutes++;
+        <span class="kw">int</span> sz=q.Count;
+        <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;sz;i++)
+        {
+            <span class="kw">var</span> (r,c)=q.<span class="fn">Dequeue</span>();
+            <span class="kw">for</span> (<span class="kw">int</span> d=<span class="num">0</span>;d&lt;<span class="num">4</span>;d++)
+            {
+                <span class="kw">int</span> nr=r+dr[d], nc=c+dc[d];
+                <span class="kw">if</span> (nr&gt;=<span class="num">0</span>&amp;&amp;nr&lt;m&amp;&amp;nc&gt;=<span class="num">0</span>&amp;&amp;nc&lt;n&amp;&amp;grid[nr][nc]==<span class="num">1</span>)
+                { grid[nr][nc]=<span class="num">2</span>; fresh--; q.<span class="fn">Enqueue</span>((nr,nc)); }
+            }
+        }
+    }
+    <span class="kw">return</span> fresh==<span class="num">0</span> ? minutes : -<span class="num">1</span>;
+}</pre></div></div>
+</div><div class="vcard" id="p6-v3">
+<button class="vtoggle" onclick="tv('p6-v3')"><span class="vname">BFS on State Space</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">The 'graph' is implicit. Nodes are states (strings, tuples, board configs), edges are valid transitions. BFS finds the shortest transformation sequence. Neighbors are computed on the fly, not stored. Classic: Word Ladder.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">LadderLength</span>(<span class="kw">string</span> begin, <span class="kw">string</span> end, <span class="type">IList</span>&lt;<span class="kw">string</span>&gt; words)
+{
+    <span class="kw">var</span> wordSet = <span class="kw">new</span> <span class="type">HashSet</span>&lt;<span class="kw">string</span>&gt;(words);
+    <span class="kw">if</span> (!wordSet.<span class="fn">Contains</span>(end)) <span class="kw">return</span> <span class="num">0</span>;
+
+    <span class="kw">var</span> q = <span class="kw">new</span> <span class="type">Queue</span>&lt;<span class="kw">string</span>&gt;();
+    q.<span class="fn">Enqueue</span>(begin); wordSet.<span class="fn">Remove</span>(begin);
+    <span class="kw">int</span> steps = <span class="num">1</span>;
+
+    <span class="kw">while</span> (q.Count &gt; <span class="num">0</span>)
+    {
+        <span class="kw">int</span> sz = q.Count;
+        <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;sz;i++)
+        {
+            <span class="kw">char</span>[] w = q.<span class="fn">Dequeue</span>().<span class="fn">ToCharArray</span>();
+            <span class="kw">for</span> (<span class="kw">int</span> j=<span class="num">0</span>;j&lt;w.Length;j++)
+            {
+                <span class="kw">char</span> orig=w[j];
+                <span class="kw">for</span> (<span class="kw">char</span> ch=<span class="str">'a'</span>;ch&lt;=<span class="str">'z'</span>;ch++)
+                {
+                    w[j]=ch;
+                    <span class="kw">string</span> next=<span class="kw">new string</span>(w);
+                    <span class="kw">if</span> (next==end) <span class="kw">return</span> steps+<span class="num">1</span>;
+                    <span class="kw">if</span> (wordSet.<span class="fn">Remove</span>(next)) q.<span class="fn">Enqueue</span>(next);
+                }
+                w[j]=orig;
+            }
+        }
+        steps++;
+    }
+    <span class="kw">return</span> <span class="num">0</span>;
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Shortest path guaranteed (BFS processes nodes in order of distance)</li><li>Level-order tree processing</li><li>Multi-source spreading problems</li><li>State space search — implicit graph</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Weighted edges → Dijkstra (priority queue BFS)</li><li>Connectivity or component counting only → DFS is simpler and cleaner</li><li>All paths or backtracking required → DFS</li><li>Dependency ordering → Topological Sort</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Problem has weights on edges? → Dijkstra. Replace Queue with PriorityQueue&lt;(int dist, int node), int&gt;. Relax edges greedily. BFS only gives shortest path when all edge weights are equal.</span></div><div class="ti"><span>Q2</span><span>Just need to know if nodes are connected (not shortest path)? → DFS with a visited set is simpler to implement and uses O(V) stack space instead of O(V) queue space.</span></div><div class="ti"><span>Q3</span><span>Need shortest path and edges have weight 0 or 1? → 0-1 BFS with a deque (add weight-0 edges to front, weight-1 to back).</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">102. Binary Tree Level Order</span><span class="pt">994. Rotting Oranges</span><span class="pt">542. 01 Matrix</span><span class="pt">127. Word Ladder</span><span class="pt">1197. Min Knight Moves</span><span class="pt">286. Walls and Gates</span></div></div>
+</div></div>
+</div><div class="card" id="p7">
+<button class="card-toggle" onclick="tc('p7')">
+  <div class="tl">
+    <div class="num" style="color:#6c5ce7;border-color:#6c5ce7">07</div>
+    <div><div class="pname">DFS — Depth-First Search</div><div class="psub">Explore fully before backtracking — connectivity, paths, and tree traversal</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(V+E)</span><span class="tag">O(V) stack space</span><span class="tag">recursive or iterative</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(V + E)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(V) recursion</div></div><div class="ib"><div class="ibl">Best For</div><div class="ibv">Connectivity / All Paths</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Count connected components — island counting</li><li>Check if path exists between two nodes</li><li>Tree traversal (preorder, inorder, postorder)</li><li>Detect cycles in directed or undirected graphs</li><li>Flood fill, paint regions, mark territories</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Need shortest path → BFS guarantees it, DFS finds A path not the shortest</li><li>Very deep recursion risk → convert to iterative with explicit Stack</li><li>Level-by-level processing needed → BFS is natural</li><li>Dependency ordering → Topological Sort</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p7-v1">
+<button class="vtoggle" onclick="tv('p7-v1')"><span class="vname">DFS on Grid — Island Counting<span class="vbadge">Most Common</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Mark cells visited by setting to '0' or using a separate visited array. Recursively visit all 4 (or 8) directions. Each DFS call from an unvisited '1' cell counts as one connected component.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">NumIslands</span>(<span class="kw">char</span>[][] grid)
+{
+    <span class="kw">int</span> count = <span class="num">0</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">0</span>;r&lt;grid.Length;r++)
+    <span class="kw">for</span> (<span class="kw">int</span> c=<span class="num">0</span>;c&lt;grid[<span class="num">0</span>].Length;c++)
+        <span class="kw">if</span> (grid[r][c]==<span class="str">'1'</span>) { <span class="fn">Dfs</span>(grid,r,c); count++; }
+    <span class="kw">return</span> count;
+}
+
+<span class="kw">void</span> <span class="fn">Dfs</span>(<span class="kw">char</span>[][] g, <span class="kw">int</span> r, <span class="kw">int</span> c)
+{
+    <span class="kw">if</span> (r&lt;<span class="num">0</span>||r&gt;=g.Length||c&lt;<span class="num">0</span>||c&gt;=g[<span class="num">0</span>].Length||g[r][c]!='<span class="str">1</span>') <span class="kw">return</span>;
+    g[r][c] = <span class="str">'0'</span>; <span class="cmt">// mark visited by sinking</span>
+    <span class="fn">Dfs</span>(g,r+<span class="num">1</span>,c); <span class="fn">Dfs</span>(g,r-<span class="num">1</span>,c); <span class="fn">Dfs</span>(g,r,c+<span class="num">1</span>); <span class="fn">Dfs</span>(g,r,c-<span class="num">1</span>);
+}</pre></div></div>
+</div><div class="vcard" id="p7-v2">
+<button class="vtoggle" onclick="tv('p7-v2')"><span class="vname">DFS with Path Tracking</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Build a current path list as you recurse. When you hit the base case (destination), add a copy of the current path to results. Remove the last element when returning (backtrack). This is where DFS and Backtracking meet.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public</span> <span class="type">IList</span>&lt;<span class="type">IList</span>&lt;<span class="kw">int</span>&gt;&gt; <span class="fn">AllPathsSourceTarget</span>(<span class="kw">int</span>[][] graph)
+{
+    <span class="kw">var</span> result = <span class="kw">new</span> <span class="type">List</span>&lt;<span class="type">IList</span>&lt;<span class="kw">int</span>&gt;&gt;();
+    <span class="kw">var</span> path   = <span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt; { <span class="num">0</span> };
+    <span class="fn">Dfs</span>(<span class="num">0</span>);
+    <span class="kw">return</span> result;
+
+    <span class="kw">void</span> <span class="fn">Dfs</span>(<span class="kw">int</span> node)
+    {
+        <span class="kw">if</span> (node == graph.Length-<span class="num">1</span>)
+        { result.<span class="fn">Add</span>(<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;(path)); <span class="kw">return</span>; }
+        <span class="kw">foreach</span> (<span class="kw">int</span> next <span class="kw">in</span> graph[node])
+        {
+            path.<span class="fn">Add</span>(next);
+            <span class="fn">Dfs</span>(next);
+            path.<span class="fn">RemoveAt</span>(path.Count-<span class="num">1</span>); <span class="cmt">// backtrack</span>
+        }
+    }
+}</pre></div></div>
+</div><div class="vcard" id="p7-v3">
+<button class="vtoggle" onclick="tv('p7-v3')"><span class="vname">Cycle Detection — 3-Color DFS</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Color nodes: 0=unvisited (WHITE), 1=in-progress (GRAY), 2=done (BLACK). If you encounter a GRAY node during DFS, there's a back edge = cycle. After processing all neighbors, color BLACK. This correctly handles directed graphs.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public bool</span> <span class="fn">CanFinish</span>(<span class="kw">int</span> n, <span class="kw">int</span>[][] prereqs)
+{
+    <span class="kw">var</span> adj = <span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;[n];
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) adj[i]=<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;();
+    <span class="kw">foreach</span> (<span class="kw">var</span> p <span class="kw">in</span> prereqs) adj[p[<span class="num">1</span>]].<span class="fn">Add</span>(p[<span class="num">0</span>]);
+
+    <span class="kw">int</span>[] color = <span class="kw">new int</span>[n]; <span class="cmt">// 0=WHITE, 1=GRAY, 2=BLACK</span>
+
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++)
+        <span class="kw">if</span> (color[i]==<span class="num">0</span> &amp;&amp; <span class="fn">HasCycle</span>(i)) <span class="kw">return false</span>;
+    <span class="kw">return true</span>;
+
+    <span class="kw">bool</span> <span class="fn">HasCycle</span>(<span class="kw">int</span> u)
+    {
+        color[u]=<span class="num">1</span>;
+        <span class="kw">foreach</span> (<span class="kw">int</span> v <span class="kw">in</span> adj[u])
+        {
+            <span class="kw">if</span> (color[v]==<span class="num">1</span>) <span class="kw">return true</span>; <span class="cmt">// back edge!</span>
+            <span class="kw">if</span> (color[v]==<span class="num">0</span> &amp;&amp; <span class="fn">HasCycle</span>(v)) <span class="kw">return true</span>;
+        }
+        color[u]=<span class="num">2</span>;
+        <span class="kw">return false</span>;
+    }
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Connectivity and island counting</li><li>Path existence (not the shortest path)</li><li>Cycle detection in directed/undirected graphs</li><li>Tree traversal (pre/in/postorder)</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Shortest path needed → BFS</li><li>All combinations/subsets needed → Backtracking</li><li>Ordering with dependencies → Topological Sort</li><li>Large depth (n > 10,000) → iterative DFS with explicit Stack</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Need the shortest path, not just any path? → BFS. DFS finds a path but does not guarantee it's the shortest. This is the most common mistake.</span></div><div class="ti"><span>Q2</span><span>Need all valid paths with choices (include/exclude) → that's Backtracking, which is DFS + choice management + undo step.</span></div><div class="ti"><span>Q3</span><span>Stack overflow risk? → Convert recursive DFS to iterative: use an explicit Stack&lt;T&gt;, push neighbors, pop and process. Same semantics, no recursion limit.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">200. Number of Islands</span><span class="pt">695. Max Area of Island</span><span class="pt">133. Clone Graph</span><span class="pt">797. All Paths Source Target</span><span class="pt">130. Surrounded Regions</span><span class="pt">207. Course Schedule</span></div></div>
+</div></div>
+</div><div class="card" id="p8">
+<button class="card-toggle" onclick="tc('p8')">
+  <div class="tl">
+    <div class="num" style="color:#fd79a8;border-color:#fd79a8">08</div>
+    <div><div class="pname">Backtracking</div><div class="psub">Build solutions incrementally — abandon paths that can't lead to valid answers</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(2ⁿ) or O(n!)</span><span class="tag">O(n) recursion stack</span><span class="tag">generate all / constraint sat</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Subsets</div><div class="ibv">O(2ⁿ)</div></div><div class="ib"><div class="ibl">Permutations</div><div class="ibv">O(n!)</div></div><div class="ib"><div class="ibl">Stack Space</div><div class="ibv">O(n)</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Generate all subsets, permutations, or combinations</li><li>Constraint satisfaction — N-Queens, Sudoku solver</li><li>Word search in a grid (path cannot revisit cells)</li><li>Partition string into palindromes</li><li>Phone digits to letter combinations</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Only need count of solutions (not all) → DP is exponentially faster</li><li>Optimization — min/max cost → DP with memoization</li><li>Just graph traversal without explicit choices → plain DFS</li><li>N > 20 — exponential time will TLE</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p8-v1">
+<button class="vtoggle" onclick="tv('p8-v1')"><span class="vname">Universal Template: Choose → Explore → Unchoose<span class="vbadge">Core Pattern</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Every backtracking problem follows: Choose (add to state), Explore (recurse), Unchoose (remove from state). Subsets: start index at i+1 (no reuse). Combinations with repetition: start at i. Permutations: use a used[] array.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// SUBSETS — record at every node</span>
+<span class="kw">void</span> <span class="fn">Subsets</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> start, <span class="type">List</span>&lt;<span class="kw">int</span>&gt; cur, <span class="type">List</span>&lt;<span class="type">IList</span>&lt;<span class="kw">int</span>&gt;&gt; res)
+{
+    res.<span class="fn">Add</span>(<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;(cur));
+    <span class="kw">for</span> (<span class="kw">int</span> i=start; i&lt;nums.Length; i++)
+    {
+        cur.<span class="fn">Add</span>(nums[i]);                         <span class="cmt">// choose</span>
+        <span class="fn">Subsets</span>(nums, i+<span class="num">1</span>, cur, res);             <span class="cmt">// explore</span>
+        cur.<span class="fn">RemoveAt</span>(cur.Count-<span class="num">1</span>);               <span class="cmt">// unchoose</span>
+    }
+}
+
+<span class="cmt">// PERMUTATIONS — all elements, order matters</span>
+<span class="kw">void</span> <span class="fn">Permute</span>(<span class="kw">int</span>[] nums, <span class="kw">bool</span>[] used, <span class="type">List</span>&lt;<span class="kw">int</span>&gt; cur, <span class="type">List</span>&lt;<span class="type">IList</span>&lt;<span class="kw">int</span>&gt;&gt; res)
+{
+    <span class="kw">if</span> (cur.Count==nums.Length) { res.<span class="fn">Add</span>(<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;(cur)); <span class="kw">return</span>; }
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>; i&lt;nums.Length; i++)
+    {
+        <span class="kw">if</span> (used[i]) <span class="kw">continue</span>;
+        used[i]=<span class="kw">true</span>;  cur.<span class="fn">Add</span>(nums[i]);
+        <span class="fn">Permute</span>(nums, used, cur, res);
+        used[i]=<span class="kw">false</span>; cur.<span class="fn">RemoveAt</span>(cur.Count-<span class="num">1</span>);
+    }
+}
+
+<span class="cmt">// COMBINATIONS SUM — reuse allowed: start at i, not i+1</span>
+<span class="kw">void</span> <span class="fn">CombSum</span>(<span class="kw">int</span>[] candidates, <span class="kw">int</span> target, <span class="kw">int</span> start, <span class="type">List</span>&lt;<span class="kw">int</span>&gt; cur, <span class="type">List</span>&lt;<span class="type">IList</span>&lt;<span class="kw">int</span>&gt;&gt; res)
+{
+    <span class="kw">if</span> (target==<span class="num">0</span>) { res.<span class="fn">Add</span>(<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;(cur)); <span class="kw">return</span>; }
+    <span class="kw">for</span> (<span class="kw">int</span> i=start; i&lt;candidates.Length; i++)
+    {
+        <span class="kw">if</span> (candidates[i]&gt;target) <span class="kw">break</span>; <span class="cmt">// pruning (requires sorted)</span>
+        cur.<span class="fn">Add</span>(candidates[i]);
+        <span class="fn">CombSum</span>(candidates, target-candidates[i], i, cur, res); <span class="cmt">// i not i+1</span>
+        cur.<span class="fn">RemoveAt</span>(cur.Count-<span class="num">1</span>);
+    }
+}</pre></div></div>
+</div><div class="vcard" id="p8-v2">
+<button class="vtoggle" onclick="tv('p8-v2')"><span class="vname">N-Queens (Constraint Satisfaction)</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Place queens row by row. Track occupied columns, diagonals (row-col), and anti-diagonals (row+col) using HashSets. Prune immediately when any constraint is violated. No need to undo row tracking — we advance one row per level.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">TotalNQueens</span>(<span class="kw">int</span> n)
+{
+    <span class="kw">var</span> cols  = <span class="kw">new</span> <span class="type">HashSet</span>&lt;<span class="kw">int</span>&gt;();
+    <span class="kw">var</span> diag1 = <span class="kw">new</span> <span class="type">HashSet</span>&lt;<span class="kw">int</span>&gt;(); <span class="cmt">// row-col</span>
+    <span class="kw">var</span> diag2 = <span class="kw">new</span> <span class="type">HashSet</span>&lt;<span class="kw">int</span>&gt;(); <span class="cmt">// row+col</span>
+    <span class="kw">int</span> count = <span class="num">0</span>;
+    <span class="fn">Bt</span>(<span class="num">0</span>);
+    <span class="kw">return</span> count;
+
+    <span class="kw">void</span> <span class="fn">Bt</span>(<span class="kw">int</span> row)
+    {
+        <span class="kw">if</span> (row==n) { count++; <span class="kw">return</span>; }
+        <span class="kw">for</span> (<span class="kw">int</span> col=<span class="num">0</span>; col&lt;n; col++)
+        {
+            <span class="kw">if</span> (cols.<span class="fn">Contains</span>(col)||diag1.<span class="fn">Contains</span>(row-col)||diag2.<span class="fn">Contains</span>(row+col)) <span class="kw">continue</span>;
+            cols.<span class="fn">Add</span>(col); diag1.<span class="fn">Add</span>(row-col); diag2.<span class="fn">Add</span>(row+col);
+            <span class="fn">Bt</span>(row+<span class="num">1</span>);
+            cols.<span class="fn">Remove</span>(col); diag1.<span class="fn">Remove</span>(row-col); diag2.<span class="fn">Remove</span>(row+col);
+        }
+    }
+}</pre></div></div>
+</div><div class="vcard" id="p8-v3">
+<button class="vtoggle" onclick="tv('p8-v3')"><span class="vname">Word Search (Grid Backtracking)</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Mark current cell visited (mutate grid), explore all 4 directions, unmark on return. Pruning: check bounds and visited state before recursing. Each cell can only be used once per path.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public bool</span> <span class="fn">Exist</span>(<span class="kw">char</span>[][] board, <span class="kw">string</span> word)
+{
+    <span class="kw">int</span> m=board.Length, n=board[<span class="num">0</span>].Length;
+    <span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">0</span>;r&lt;m;r++) <span class="kw">for</span> (<span class="kw">int</span> c=<span class="num">0</span>;c&lt;n;c++)
+        <span class="kw">if</span> (<span class="fn">Bt</span>(r,c,<span class="num">0</span>)) <span class="kw">return true</span>;
+    <span class="kw">return false</span>;
+
+    <span class="kw">bool</span> <span class="fn">Bt</span>(<span class="kw">int</span> r, <span class="kw">int</span> c, <span class="kw">int</span> idx)
+    {
+        <span class="kw">if</span> (idx==word.Length) <span class="kw">return true</span>;
+        <span class="kw">if</span> (r&lt;<span class="num">0</span>||r&gt;=m||c&lt;<span class="num">0</span>||c&gt;=n||board[r][c]!=word[idx]) <span class="kw">return false</span>;
+        <span class="kw">char</span> tmp=board[r][c]; board[r][c]=<span class="str">'#'</span>; <span class="cmt">// mark visited</span>
+        <span class="kw">bool</span> found=<span class="fn">Bt</span>(r+<span class="num">1</span>,c,idx+<span class="num">1</span>)||<span class="fn">Bt</span>(r-<span class="num">1</span>,c,idx+<span class="num">1</span>)||
+                   <span class="fn">Bt</span>(r,c+<span class="num">1</span>,idx+<span class="num">1</span>)||<span class="fn">Bt</span>(r,c-<span class="num">1</span>,idx+<span class="num">1</span>);
+        board[r][c]=tmp; <span class="cmt">// restore</span>
+        <span class="kw">return</span> found;
+    }
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Need to generate all valid arrangements — no shortcut exists</li><li>Constraint satisfaction with pruning (N-Queens, Sudoku)</li><li>Grid word search — path cannot revisit cells</li><li>All valid partitions or splits required</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Count only → DP is O(n²) vs O(2ⁿ) — massive speedup</li><li>Optimization (min/max) → DP with memoization</li><li>Plain graph traversal no choices → DFS</li><li>N is large (> 20) — exponential won't pass Google's time limit</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Only need a count of solutions? → DP. Same recurrence, but cache the subproblem result instead of branching. Coin Change is Backtracking's DP equivalent.</span></div><div class="ti"><span>Q2</span><span>Optimization without tracking path? → Memoized DFS (DP). The backtracking state becomes the DP state.</span></div><div class="ti"><span>Q3</span><span>Large N? → Think whether the problem has overlapping subproblems. If yes, memoize. If no (truly exponential), add stronger pruning constraints.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">78. Subsets</span><span class="pt">77. Combinations</span><span class="pt">46. Permutations</span><span class="pt">39. Combination Sum</span><span class="pt">79. Word Search</span><span class="pt">51. N-Queens</span><span class="pt">131. Palindrome Partitioning</span></div></div>
+</div></div>
+</div>
+<div class="phase-header">
+  <span class="phase-badge">Phase 4</span>
+  <span class="phase-title">Optimization Patterns — Weeks 4–5</span>
+  <div class="phase-line"></div>
+</div><div class="card" id="p9">
+<button class="card-toggle" onclick="tc('p9')">
+  <div class="tl">
+    <div class="num" style="color:#fd79a8;border-color:#fd79a8">09</div>
+    <div><div class="pname">Dynamic Programming</div><div class="psub">Cache overlapping subproblem results — count ways, min cost, max profit</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(n²) typical</span><span class="tag">O(n) or O(n²) space</span><span class="tag">optimal substructure</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(n²) typical</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(n) or O(n²)</div></div><div class="ib"><div class="ibl">Requires</div><div class="ibv">Optimal Substructure</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>'How many ways to…' — count problems</li><li>'Minimum/maximum cost/steps to…'</li><li>Decision at each step with repeated subproblems</li><li>Backtracking gives TLE — same subproblem solved many times</li><li>Problems with k transactions, splits, or partitions</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Need all solutions — Backtracking</li><li>No overlapping subproblems — Greedy or direct formula</li><li>Shortest path on unweighted graph — BFS</li><li>Sequence without clear recurrence relation</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p9-v1">
+<button class="vtoggle" onclick="tv('p9-v1')"><span class="vname">1D DP — Linear Sequence<span class="vbadge">Start Here</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">State is a single index. dp[i] depends on dp[i-1] or dp[i-2]. Often reducible to O(1) space by keeping only the last 1-2 values. The three building blocks: Fibonacci recurrence, House Robber (skip or take), Climbing Stairs (combine).</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// House Robber: dp[i] = max(skip=dp[i-1], take=dp[i-2]+nums[i])</span>
+<span class="kw">public int</span> <span class="fn">Rob</span>(<span class="kw">int</span>[] nums)
+{
+    <span class="kw">int</span> prev2=<span class="num">0</span>, prev1=<span class="num">0</span>;
+    <span class="kw">foreach</span> (<span class="kw">int</span> num <span class="kw">in</span> nums)
+    {
+        <span class="kw">int</span> curr = <span class="type">Math</span>.<span class="fn">Max</span>(prev1, prev2+num);
+        prev2=prev1; prev1=curr;
+    }
+    <span class="kw">return</span> prev1;
+}
+
+<span class="cmt">// LIS: dp[i] = longest increasing subseq ending at i</span>
+<span class="kw">public int</span> <span class="fn">LengthOfLIS</span>(<span class="kw">int</span>[] nums)
+{
+    <span class="kw">int</span> n=nums.Length; <span class="kw">int</span>[] dp=<span class="kw">new int</span>[n]; <span class="type">Array</span>.<span class="fn">Fill</span>(dp,<span class="num">1</span>);
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">1</span>;i&lt;n;i++)
+        <span class="kw">for</span> (<span class="kw">int</span> j=<span class="num">0</span>;j&lt;i;j++)
+            <span class="kw">if</span> (nums[j]&lt;nums[i]) dp[i]=<span class="type">Math</span>.<span class="fn">Max</span>(dp[i], dp[j]+<span class="num">1</span>);
+    <span class="kw">return</span> dp.<span class="fn">Max</span>();
+}</pre></div></div>
+</div><div class="vcard" id="p9-v2">
+<button class="vtoggle" onclick="tv('p9-v2')"><span class="vname">2D DP — Two Sequences or Grid</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">State needs two indices. dp[i][j] typically depends on dp[i-1][j], dp[i][j-1], or dp[i-1][j-1]. Used for LCS, Edit Distance, Unique Paths, Coin Change 2D. Base cases fill first row/column.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Edit Distance: min operations to convert word1 to word2</span>
+<span class="kw">public int</span> <span class="fn">MinDistance</span>(<span class="kw">string</span> s, <span class="kw">string</span> t)
+{
+    <span class="kw">int</span> m=s.Length, n=t.Length;
+    <span class="kw">int</span>[,] dp=<span class="kw">new int</span>[m+<span class="num">1</span>,n+<span class="num">1</span>];
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;=m;i++) dp[i,<span class="num">0</span>]=i;
+    <span class="kw">for</span> (<span class="kw">int</span> j=<span class="num">0</span>;j&lt;=n;j++) dp[<span class="num">0</span>,j]=j;
+
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">1</span>;i&lt;=m;i++)
+    <span class="kw">for</span> (<span class="kw">int</span> j=<span class="num">1</span>;j&lt;=n;j++)
+        dp[i,j] = s[i-<span class="num">1</span>]==t[j-<span class="num">1</span>]
+            ? dp[i-<span class="num">1</span>,j-<span class="num">1</span>]
+            : <span class="num">1</span>+<span class="type">Math</span>.<span class="fn">Min</span>(dp[i-<span class="num">1</span>,j-<span class="num">1</span>], <span class="type">Math</span>.<span class="fn">Min</span>(dp[i-<span class="num">1</span>,j], dp[i,j-<span class="num">1</span>]));
+    <span class="kw">return</span> dp[m,n];
+}</pre></div></div>
+</div><div class="vcard" id="p9-v3">
+<button class="vtoggle" onclick="tv('p9-v3')"><span class="vname">Knapsack — 0/1 and Unbounded</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">0/1 Knapsack: each item at most once → iterate capacity backwards (prevent reuse in same pass). Unbounded Knapsack: items reusable → iterate capacity forwards. Coin Change is unbounded; 0/1 Knapsack uses backward iteration.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Coin Change — Unbounded (each coin reusable)</span>
+<span class="kw">public int</span> <span class="fn">CoinChange</span>(<span class="kw">int</span>[] coins, <span class="kw">int</span> amount)
+{
+    <span class="kw">int</span>[] dp = <span class="kw">new int</span>[amount+<span class="num">1</span>];
+    <span class="type">Array</span>.<span class="fn">Fill</span>(dp, amount+<span class="num">1</span>); <span class="cmt">// sentinel infinity</span>
+    dp[<span class="num">0</span>] = <span class="num">0</span>;
+    <span class="kw">foreach</span> (<span class="kw">int</span> coin <span class="kw">in</span> coins)
+        <span class="kw">for</span> (<span class="kw">int</span> a=coin; a&lt;=amount; a++) <span class="cmt">// forward = reuse allowed</span>
+            dp[a] = <span class="type">Math</span>.<span class="fn">Min</span>(dp[a], dp[a-coin]+<span class="num">1</span>);
+    <span class="kw">return</span> dp[amount]&gt;amount ? -<span class="num">1</span> : dp[amount];
+}
+
+<span class="cmt">// 0/1 Knapsack — each item at most once</span>
+<span class="kw">public int</span> <span class="fn">Knapsack01</span>(<span class="kw">int</span>[] weights, <span class="kw">int</span>[] values, <span class="kw">int</span> cap)
+{
+    <span class="kw">int</span>[] dp = <span class="kw">new int</span>[cap+<span class="num">1</span>];
+    <span class="kw">foreach</span> (<span class="kw">int</span> i <span class="kw">in</span> <span class="type">Enumerable</span>.<span class="fn">Range</span>(<span class="num">0</span>, weights.Length))
+        <span class="kw">for</span> (<span class="kw">int</span> w=cap; w&gt;=weights[i]; w--) <span class="cmt">// backward = no reuse</span>
+            dp[w] = <span class="type">Math</span>.<span class="fn">Max</span>(dp[w], dp[w-weights[i]]+values[i]);
+    <span class="kw">return</span> dp[cap];
+}</pre></div></div>
+</div><div class="vcard" id="p9-v4">
+<button class="vtoggle" onclick="tv('p9-v4')"><span class="vname">Interval DP (DP on Ranges)</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">dp[i][j] = answer for subarray [i,j]. Iterate by increasing length. Split point k divides interval into two already-solved subproblems. Used in Burst Balloons, Matrix Chain, Palindrome Partitioning II.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Burst Balloons — dp[i][j] = max coins bursting all in (i,j) exclusive</span>
+<span class="kw">public int</span> <span class="fn">MaxCoins</span>(<span class="kw">int</span>[] nums)
+{
+    <span class="kw">int</span> n=nums.Length;
+    <span class="kw">int</span>[] a=<span class="kw">new int</span>[n+<span class="num">2</span>]; a[<span class="num">0</span>]=a[n+<span class="num">1</span>]=<span class="num">1</span>;
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) a[i+<span class="num">1</span>]=nums[i];
+    <span class="kw">int</span> N=n+<span class="num">2</span>;
+    <span class="kw">int</span>[,] dp=<span class="kw">new int</span>[N,N];
+
+    <span class="kw">for</span> (<span class="kw">int</span> len=<span class="num">2</span>;len&lt;N;len++)
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i+len&lt;N;i++)
+    {
+        <span class="kw">int</span> j=i+len;
+        <span class="kw">for</span> (<span class="kw">int</span> k=i+<span class="num">1</span>;k&lt;j;k++) <span class="cmt">// k = LAST burst in (i,j)</span>
+            dp[i,j]=<span class="type">Math</span>.<span class="fn">Max</span>(dp[i,j], dp[i,k]+a[i]*a[k]*a[j]+dp[k,j]);
+    }
+    <span class="kw">return</span> dp[<span class="num">0</span>,N-<span class="num">1</span>];
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Count ways, min cost, or max profit with repeating choices</li><li>Backtracking TLE — same subproblem computed many times</li><li>n ≤ 1000 → O(n²) is acceptable at Google</li><li>Optimal substructure holds: optimal answer built from optimal sub-answers</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Greedy works: local optimal = global optimal, no need to revisit</li><li>Need all explicit solutions → Backtracking</li><li>Unweighted graph shortest path → BFS</li><li>No recurrence can be defined → BFS on state space</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>How do I know if DP applies? → Ask: 'If I fix the last decision, does the remaining problem have the same structure?' If yes, write dp[last_choice] and recurse. That's DP.</span></div><div class="ti"><span>Q2</span><span>Greedy vs DP? → Try greedy first. If a locally optimal choice always leads to global optimum (e.g., Activity Selection, Huffman), use greedy. If future choices affect optimality, use DP.</span></div><div class="ti"><span>Q3</span><span>Can't find the recurrence? → Think recursively first. Write the brute force recursive solution, identify what parameters change per call — those become the DP state. Add memoization. Convert to bottom-up if needed.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">70. Climbing Stairs</span><span class="pt">198. House Robber</span><span class="pt">300. LIS</span><span class="pt">322. Coin Change</span><span class="pt">1143. LCS</span><span class="pt">72. Edit Distance</span><span class="pt">312. Burst Balloons</span><span class="pt">416. Partition Equal Subset</span></div></div>
+</div></div>
+</div><div class="card" id="p10">
+<button class="card-toggle" onclick="tc('p10')">
+  <div class="tl">
+    <div class="num" style="color:#b8e994;border-color:#b8e994">10</div>
+    <div><div class="pname">Monotonic Stack</div><div class="psub">Next greater/smaller in O(n) — each element pushed and popped exactly once</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(n) amortized</span><span class="tag">O(n) space</span><span class="tag">next greater/smaller element</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(n) amortized</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(n)</div></div><div class="ib"><div class="ibl">Key</div><div class="ibv">Each element enters/exits once</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Next greater element to the right for each index</li><li>Previous smaller element — span calculation</li><li>Largest rectangle in histogram</li><li>Trapping Rain Water (need left-min and right-min)</li><li>Daily Temperatures, Stock Span</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Global max/min → just scan or use a heap</li><li>Sliding window max/min → Monotonic Deque (not stack)</li><li>2D problems without clear linear scan → BFS/DFS</li><li>Need fully ordered results → sort first</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p10-v1">
+<button class="vtoggle" onclick="tv('p10-v1')"><span class="vname">Next Greater Element<span class="vbadge">Core Template</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Maintain a decreasing stack (for next greater). When a new element is greater than the stack top, the stack top has found its answer — pop and record. Push the new element. For next smaller: use an increasing stack.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Next Greater Element — decreasing stack</span>
+<span class="kw">public int</span>[] <span class="fn">NextGreater</span>(<span class="kw">int</span>[] nums)
+{
+    <span class="kw">int</span> n=nums.Length;
+    <span class="kw">int</span>[] res=<span class="kw">new int</span>[n]; <span class="type">Array</span>.<span class="fn">Fill</span>(res,-<span class="num">1</span>);
+    <span class="kw">var</span> st=<span class="kw">new</span> <span class="type">Stack</span>&lt;<span class="kw">int</span>&gt;(); <span class="cmt">// stores indices</span>
+
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++)
+    {
+        <span class="cmt">// pop all indices whose next greater is nums[i]</span>
+        <span class="kw">while</span> (st.Count&gt;<span class="num">0</span> &amp;&amp; nums[st.Peek()]&lt;nums[i])
+            res[st.<span class="fn">Pop</span>()]=nums[i];
+        st.<span class="fn">Push</span>(i);
+    }
+    <span class="kw">return</span> res;
+}
+
+<span class="cmt">// Daily Temperatures: days until warmer</span>
+<span class="kw">public int</span>[] <span class="fn">DailyTemperatures</span>(<span class="kw">int</span>[] t)
+{
+    <span class="kw">int</span>[] res=<span class="kw">new int</span>[t.Length];
+    <span class="kw">var</span> st=<span class="kw">new</span> <span class="type">Stack</span>&lt;<span class="kw">int</span>&gt;();
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;t.Length;i++)
+    {
+        <span class="kw">while</span> (st.Count&gt;<span class="num">0</span> &amp;&amp; t[st.Peek()]&lt;t[i])
+        { <span class="kw">int</span> j=st.<span class="fn">Pop</span>(); res[j]=i-j; }
+        st.<span class="fn">Push</span>(i);
+    }
+    <span class="kw">return</span> res;
+}</pre></div></div>
+</div><div class="vcard" id="p10-v2">
+<button class="vtoggle" onclick="tv('p10-v2')"><span class="vname">Largest Rectangle in Histogram</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Maintain an increasing stack of bar indices. When a shorter bar arrives, pop stack tops that are taller — they can't extend right past this point. Compute width using the new stack top as the left boundary. Append a sentinel height 0 to flush all bars.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span> <span class="fn">LargestRectangleArea</span>(<span class="kw">int</span>[] heights)
+{
+    <span class="kw">var</span> st=<span class="kw">new</span> <span class="type">Stack</span>&lt;<span class="kw">int</span>&gt;();
+    <span class="kw">int</span> maxA=<span class="num">0</span>;
+    <span class="kw">int</span>[] h=heights.<span class="fn">Append</span>(<span class="num">0</span>).<span class="fn">ToArray</span>(); <span class="cmt">// sentinel</span>
+
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;h.Length;i++)
+    {
+        <span class="kw">while</span> (st.Count&gt;<span class="num">0</span> &amp;&amp; h[st.Peek()]&gt;h[i])
+        {
+            <span class="kw">int</span> height=h[st.<span class="fn">Pop</span>()];
+            <span class="kw">int</span> width=st.Count==<span class="num">0</span> ? i : i-st.Peek()-<span class="num">1</span>;
+            maxA=<span class="type">Math</span>.<span class="fn">Max</span>(maxA, height*width);
+        }
+        st.<span class="fn">Push</span>(i);
+    }
+    <span class="kw">return</span> maxA;
+}</pre></div></div>
+</div><div class="vcard" id="p10-v3">
+<button class="vtoggle" onclick="tv('p10-v3')"><span class="vname">Trapping Rain Water</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Two approaches: (1) Precompute left-max and right-max arrays — water at i = min(leftMax[i], rightMax[i]) - height[i]. O(n) time, O(n) space. (2) Two pointers: maintain running max from each side, process the smaller side. O(n) time, O(1) space.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Two-pointer O(1) space approach</span>
+<span class="kw">public int</span> <span class="fn">Trap</span>(<span class="kw">int</span>[] h)
+{
+    <span class="kw">int</span> left=<span class="num">0</span>, right=h.Length-<span class="num">1</span>, lMax=<span class="num">0</span>, rMax=<span class="num">0</span>, water=<span class="num">0</span>;
+    <span class="kw">while</span> (left&lt;right)
+    {
+        <span class="kw">if</span> (h[left]&lt;h[right])
+        {
+            lMax=<span class="type">Math</span>.<span class="fn">Max</span>(lMax,h[left]);
+            water+=lMax-h[left++];
+        }
+        <span class="kw">else</span>
+        {
+            rMax=<span class="type">Math</span>.<span class="fn">Max</span>(rMax,h[right]);
+            water+=rMax-h[right--];
+        }
+    }
+    <span class="kw">return</span> water;
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Next greater/smaller element for each index</li><li>Histogram rectangle calculation</li><li>Stack-based span calculations</li><li>Trapping Rain Water with prefix arrays</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Global max/min → single scan or sort</li><li>Sliding window max/min → Monotonic Deque (values can leave from front too)</li><li>2D area problems → BFS/DFS connectivity</li><li>No clear left-to-right or right-to-left linear scan</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Problem is about 2D ranges, not 1D sequences? → BFS/DFS. Monotonic stack is fundamentally a linear scan pattern.</span></div><div class="ti"><span>Q2</span><span>Need max/min inside a sliding window of variable size? → Monotonic Deque. Unlike a stack, elements can exit from both ends — the front for out-of-window elements, the back for dominated elements.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">739. Daily Temperatures</span><span class="pt">496. Next Greater Element I</span><span class="pt">503. Next Greater Element II</span><span class="pt">84. Largest Rectangle</span><span class="pt">42. Trapping Rain Water</span><span class="pt">85. Maximal Rectangle</span></div></div>
+</div></div>
+</div>
+<div class="phase-header">
+  <span class="phase-badge">Phase 5</span>
+  <span class="phase-title">Specialized Patterns — Weeks 5–6</span>
+  <div class="phase-line"></div>
+</div><div class="card" id="p11">
+<button class="card-toggle" onclick="tc('p11')">
+  <div class="tl">
+    <div class="num" style="color:#00cec9;border-color:#00cec9">11</div>
+    <div><div class="pname">Heap / Priority Queue</div><div class="psub">Efficiently track top-K, running median, or event-driven scheduling</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(n log k)</span><span class="tag">O(k) space</span><span class="tag">top-K / median / schedule</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Insert/Remove</div><div class="ibv">O(log n)</div></div><div class="ib"><div class="ibl">Peek Min/Max</div><div class="ibv">O(1)</div></div><div class="ib"><div class="ibl">Build Heap</div><div class="ibv">O(n)</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Top K largest/smallest/frequent elements</li><li>Kth largest element in a stream or array</li><li>Median of a running stream</li><li>Merge K sorted lists or arrays</li><li>Task scheduling and meeting room problems</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>K equals n → just sort in O(n log n)</li><li>Need exact sorted order → sort is simpler</li><li>Static data, single query → QuickSelect O(n) average</li><li>Graph shortest path → Dijkstra (heap + relaxation)</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p11-v1">
+<button class="vtoggle" onclick="tv('p11-v1')"><span class="vname">Top-K with Min-Heap<span class="vbadge">Most Common</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Maintain a min-heap of size K. When size exceeds K, pop the minimum. At the end, heap contains the K largest elements. The heap top is the Kth largest. For top-K smallest: use a max-heap (negate priorities in C#'s PriorityQueue).</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="cmt">// Kth Largest — min-heap of size k</span>
+<span class="kw">public int</span> <span class="fn">FindKthLargest</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> k)
+{
+    <span class="kw">var</span> heap = <span class="kw">new</span> <span class="type">PriorityQueue</span>&lt;<span class="kw">int</span>,<span class="kw">int</span>&gt;();
+    <span class="kw">foreach</span> (<span class="kw">int</span> n <span class="kw">in</span> nums)
+    {
+        heap.<span class="fn">Enqueue</span>(n, n);
+        <span class="kw">if</span> (heap.Count&gt;k) heap.<span class="fn">Dequeue</span>(); <span class="cmt">// remove smallest</span>
+    }
+    <span class="kw">return</span> heap.<span class="fn">Peek</span>(); <span class="cmt">// kth largest</span>
+}
+
+<span class="cmt">// Top K Frequent — frequency as priority</span>
+<span class="kw">public int</span>[] <span class="fn">TopKFrequent</span>(<span class="kw">int</span>[] nums, <span class="kw">int</span> k)
+{
+    <span class="kw">var</span> freq = <span class="kw">new</span> <span class="type">Dictionary</span>&lt;<span class="kw">int</span>,<span class="kw">int</span>&gt;();
+    <span class="kw">foreach</span> (<span class="kw">int</span> n <span class="kw">in</span> nums) freq[n]=freq.<span class="fn">GetValueOrDefault</span>(n)+<span class="num">1</span>;
+    <span class="kw">var</span> heap = <span class="kw">new</span> <span class="type">PriorityQueue</span>&lt;<span class="kw">int</span>,<span class="kw">int</span>&gt;();
+    <span class="kw">foreach</span> (<span class="kw">var</span> (num,cnt) <span class="kw">in</span> freq)
+    {
+        heap.<span class="fn">Enqueue</span>(num, cnt);
+        <span class="kw">if</span> (heap.Count&gt;k) heap.<span class="fn">Dequeue</span>();
+    }
+    <span class="kw">return</span> heap.<span class="fn">UnorderedItems</span>().<span class="fn">Select</span>(x=&gt;x.Element).<span class="fn">ToArray</span>();
+}</pre></div></div>
+</div><div class="vcard" id="p11-v2">
+<button class="vtoggle" onclick="tv('p11-v2')"><span class="vname">Two Heaps — Median of Stream</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Max-heap for lower half, min-heap for upper half. Keep sizes balanced (differ by at most 1). Median is always at the top of the larger heap, or average of both tops when equal size. Insertion: always push to max-heap first, then rebalance.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public class</span> <span class="type">MedianFinder</span>
+{
+    <span class="cmt">// lo = max-heap (lower half), hi = min-heap (upper half)</span>
+    <span class="kw">private</span> <span class="type">PriorityQueue</span>&lt;<span class="kw">int</span>,<span class="kw">int</span>&gt; _lo=<span class="kw">new</span>(), _hi=<span class="kw">new</span>();
+
+    <span class="kw">public void</span> <span class="fn">AddNum</span>(<span class="kw">int</span> num)
+    {
+        _lo.<span class="fn">Enqueue</span>(num,-num); <span class="cmt">// negate for max-heap</span>
+        <span class="cmt">// balance: move lo's max to hi</span>
+        _hi.<span class="fn">Enqueue</span>(_lo.Peek(), _lo.Peek()); _lo.<span class="fn">Dequeue</span>();
+        <span class="cmt">// if hi bigger, move hi's min back to lo</span>
+        <span class="kw">if</span> (_hi.Count &gt; _lo.Count)
+        { <span class="kw">int</span> v=_hi.<span class="fn">Dequeue</span>(); _lo.<span class="fn">Enqueue</span>(v,-v); }
+    }
+
+    <span class="kw">public double</span> <span class="fn">FindMedian</span>() =&gt;
+        _lo.Count&gt;_hi.Count ? _lo.Peek() : (_lo.Peek()+_hi.Peek())/2.0;
+}</pre></div></div>
+</div><div class="vcard" id="p11-v3">
+<button class="vtoggle" onclick="tv('p11-v3')"><span class="vname">Merge K Sorted Lists</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Use a min-heap storing the current head of each list. Pop the minimum, add it to result, then enqueue that node's next. Total: O(N log K) where N = total nodes, K = number of lists.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public</span> <span class="type">ListNode</span> <span class="fn">MergeKLists</span>(<span class="type">ListNode</span>[] lists)
+{
+    <span class="kw">var</span> heap = <span class="kw">new</span> <span class="type">PriorityQueue</span>&lt;<span class="type">ListNode</span>,<span class="kw">int</span>&gt;();
+    <span class="kw">foreach</span> (<span class="kw">var</span> head <span class="kw">in</span> lists)
+        <span class="kw">if</span> (head!=<span class="kw">null</span>) heap.<span class="fn">Enqueue</span>(head, head.val);
+
+    <span class="kw">var</span> dummy=<span class="kw">new</span> <span class="type">ListNode</span>(); <span class="kw">var</span> cur=dummy;
+
+    <span class="kw">while</span> (heap.Count&gt;<span class="num">0</span>)
+    {
+        <span class="kw">var</span> node=heap.<span class="fn">Dequeue</span>();
+        cur=cur.next=node;
+        <span class="kw">if</span> (node.next!=<span class="kw">null</span>) heap.<span class="fn">Enqueue</span>(node.next, node.next.val);
+    }
+    <span class="kw">return</span> dummy.next;
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Top K elements with O(n log k) instead of O(n log n) sort</li><li>Running median — dynamic stream of numbers</li><li>Merge K sorted sources simultaneously</li><li>Meeting rooms / task scheduling with deadlines</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>K = N → sort instead</li><li>Single static query → QuickSelect is O(n) average</li><li>Graph shortest path → Dijkstra wraps a heap with relaxation logic</li><li>Simple min/max of full array → Array.Min() is O(n)</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Need exact Kth without O(n log n)? → QuickSelect (Hoare's partition) gives O(n) average but O(n²) worst case. Use it for static arrays, not dynamic streams.</span></div><div class="ti"><span>Q2</span><span>Top K with O(n log n) acceptable? → Sort descending, take first K. Simpler code, acceptable for n up to 10^5.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">215. Kth Largest Element</span><span class="pt">347. Top K Frequent</span><span class="pt">295. Find Median from Stream</span><span class="pt">23. Merge K Sorted Lists</span><span class="pt">621. Task Scheduler</span><span class="pt">1167. Min Cost Connect Sticks</span></div></div>
+</div></div>
+</div><div class="card" id="p12">
+<button class="card-toggle" onclick="tc('p12')">
+  <div class="tl">
+    <div class="num" style="color:#e17055;border-color:#e17055">12</div>
+    <div><div class="pname">Union-Find (DSU)</div><div class="psub">Dynamic connectivity — track and merge components as edges are added</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(α(n)) per op</span><span class="tag">O(n) space</span><span class="tag">dynamic connectivity</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Find</div><div class="ibv">O(α(n)) ≈ O(1)</div></div><div class="ib"><div class="ibl">Union</div><div class="ibv">O(α(n)) ≈ O(1)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(n)</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Detect cycle in undirected graph</li><li>Count connected components as edges are added dynamically</li><li>Check if two nodes are in the same component</li><li>Kruskal's Minimum Spanning Tree</li><li>Dynamic equivalence queries</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Edge removal needed (DSU only supports union, not split)</li><li>Directed graph connectivity → DFS/BFS or Tarjan's SCC</li><li>Static graph → BFS or DFS is simpler</li><li>Need shortest path → BFS or Dijkstra</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p12-v1">
+<button class="vtoggle" onclick="tv('p12-v1')"><span class="vname">Full DSU Implementation<span class="vbadge">Use This Every Time</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Path compression + union by rank. Path compression flattens the tree during Find. Union by rank attaches smaller tree under larger. Together: nearly O(1) per operation (inverse Ackermann).</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public class</span> <span class="type">UnionFind</span>
+{
+    <span class="kw">private int</span>[] _parent, _rank;
+    <span class="kw">public int</span> Components { <span class="kw">get</span>; <span class="kw">private set</span>; }
+
+    <span class="kw">public</span> <span class="fn">UnionFind</span>(<span class="kw">int</span> n)
+    {
+        _parent = <span class="type">Enumerable</span>.<span class="fn">Range</span>(<span class="num">0</span>,n).<span class="fn">ToArray</span>();
+        _rank   = <span class="kw">new int</span>[n];
+        Components = n;
+    }
+
+    <span class="cmt">// Path compression: flatten tree on the way up</span>
+    <span class="kw">public int</span> <span class="fn">Find</span>(<span class="kw">int</span> x)
+    {
+        <span class="kw">if</span> (_parent[x]!=x) _parent[x]=<span class="fn">Find</span>(_parent[x]);
+        <span class="kw">return</span> _parent[x];
+    }
+
+    <span class="cmt">// Union by rank: smaller tree under larger</span>
+    <span class="kw">public bool</span> <span class="fn">Union</span>(<span class="kw">int</span> x, <span class="kw">int</span> y)
+    {
+        <span class="kw">int</span> px=<span class="fn">Find</span>(x), py=<span class="fn">Find</span>(y);
+        <span class="kw">if</span> (px==py) <span class="kw">return false</span>; <span class="cmt">// already connected = cycle!</span>
+        <span class="kw">if</span>      (_rank[px]&lt;_rank[py]) _parent[px]=py;
+        <span class="kw">else if</span> (_rank[px]&gt;_rank[py]) _parent[py]=px;
+        <span class="kw">else</span> { _parent[py]=px; _rank[px]++; }
+        Components--;
+        <span class="kw">return true</span>;
+    }
+
+    <span class="kw">public bool</span> <span class="fn">Connected</span>(<span class="kw">int</span> x, <span class="kw">int</span> y) =&gt; <span class="fn">Find</span>(x)==<span class="fn">Find</span>(y);
+}
+
+<span class="cmt">// Detect undirected cycle: union returns false if same component</span>
+<span class="kw">public bool</span> <span class="fn">HasCycle</span>(<span class="kw">int</span> n, <span class="kw">int</span>[][] edges)
+{
+    <span class="kw">var</span> uf=<span class="kw">new</span> <span class="type">UnionFind</span>(n);
+    <span class="kw">foreach</span> (<span class="kw">var</span> e <span class="kw">in</span> edges)
+        <span class="kw">if</span> (!uf.<span class="fn">Union</span>(e[<span class="num">0</span>],e[<span class="num">1</span>])) <span class="kw">return true</span>;
+    <span class="kw">return false</span>;
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Dynamic connectivity — edges arrive one at a time</li><li>Undirected graph cycle detection</li><li>Count components remaining after grouping</li><li>Kruskal's MST — union edges greedily by weight</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Edge removal → use link-cut tree (very advanced)</li><li>Directed graph → DFS with 3 colors or Kahn's Topo Sort</li><li>Static graph (all edges known) → BFS/DFS simpler</li><li>Shortest path or weighted queries → Dijkstra/BFS</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Need to also remove edges? → DSU only supports union. There's no efficient 'split'. Use a different approach or offline queries (process in reverse: deletions become additions).</span></div><div class="ti"><span>Q2</span><span>Directed graph connectivity? → DSU ignores edge direction. For directed reachability, use DFS. For strongly connected components, use Tarjan's or Kosaraju's algorithm.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">200. Number of Islands (compare vs DFS)</span><span class="pt">684. Redundant Connection</span><span class="pt">547. Number of Provinces</span><span class="pt">990. Satisfiability of Equations</span><span class="pt">1202. Smallest String Swapping</span><span class="pt">1319. Make Network Connected</span></div></div>
+</div></div>
+</div><div class="card" id="p13">
+<button class="card-toggle" onclick="tc('p13')">
+  <div class="tl">
+    <div class="num" style="color:#55efc4;border-color:#55efc4">13</div>
+    <div><div class="pname">Topological Sort</div><div class="psub">Order nodes so all edges point forward — dependency and prerequisite resolution</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(V+E)</span><span class="tag">O(V+E) space</span><span class="tag">DAG only</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Time</div><div class="ibv">O(V + E)</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(V + E)</div></div><div class="ib"><div class="ibl">Graph</div><div class="ibv">DAG only — fails on cycles</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Prerequisite or dependency ordering problems</li><li>Detect cycles in directed graphs ('can you finish all courses?')</li><li>Build order, task scheduling with dependencies</li><li>Alien Dictionary — infer character ordering</li><li>Any DAG where you need a valid linearization</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Graph has cycles → Topo Sort fails, use cycle detection instead</li><li>Undirected graph → DFS/BFS/Union-Find</li><li>Shortest path → BFS (unweighted) or Dijkstra</li><li>All orderings required → backtracking over topo sort result</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p13-v1">
+<button class="vtoggle" onclick="tv('p13-v1')"><span class="vname">Kahn's Algorithm (BFS-based)<span class="vbadge">Preferred for Interviews</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Compute in-degrees. Enqueue all nodes with in-degree 0. Loop: dequeue, add to result, decrement neighbors' in-degrees, enqueue those that reach 0. If result.Count &lt; n, a cycle exists — return empty.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span>[] <span class="fn">FindOrder</span>(<span class="kw">int</span> n, <span class="kw">int</span>[][] prereqs)
+{
+    <span class="kw">var</span> adj = <span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;[n];
+    <span class="kw">int</span>[] inDeg = <span class="kw">new int</span>[n];
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) adj[i]=<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;();
+
+    <span class="kw">foreach</span> (<span class="kw">var</span> p <span class="kw">in</span> prereqs)
+    { adj[p[<span class="num">1</span>]].<span class="fn">Add</span>(p[<span class="num">0</span>]); inDeg[p[<span class="num">0</span>]]++; }
+
+    <span class="kw">var</span> q=<span class="kw">new</span> <span class="type">Queue</span>&lt;<span class="kw">int</span>&gt;();
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) <span class="kw">if</span> (inDeg[i]==<span class="num">0</span>) q.<span class="fn">Enqueue</span>(i);
+
+    <span class="kw">var</span> res=<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;();
+    <span class="kw">while</span> (q.Count&gt;<span class="num">0</span>)
+    {
+        <span class="kw">int</span> node=q.<span class="fn">Dequeue</span>(); res.<span class="fn">Add</span>(node);
+        <span class="kw">foreach</span> (<span class="kw">int</span> next <span class="kw">in</span> adj[node])
+            <span class="kw">if</span> (--inDeg[next]==<span class="num">0</span>) q.<span class="fn">Enqueue</span>(next);
+    }
+
+    <span class="kw">return</span> res.Count==n ? res.<span class="fn">ToArray</span>() : <span class="type">Array</span>.Empty&lt;<span class="kw">int</span>&gt;();
+    <span class="cmt">// Empty = cycle detected</span>
+}</pre></div></div>
+</div><div class="vcard" id="p13-v2">
+<button class="vtoggle" onclick="tv('p13-v2')"><span class="vname">DFS-based Topo Sort (Postorder)</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Run DFS, pushing each fully-processed node onto a stack (postorder). Reverse the stack for topological order. Color: 0=unvisited, 1=in-progress (GRAY), 2=done. If you hit GRAY, there's a cycle.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public int</span>[] <span class="fn">TopoSortDfs</span>(<span class="kw">int</span> n, <span class="kw">int</span>[][] edges)
+{
+    <span class="kw">var</span> adj=<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;[n];
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) adj[i]=<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">int</span>&gt;();
+    <span class="kw">foreach</span> (<span class="kw">var</span> e <span class="kw">in</span> edges) adj[e[<span class="num">0</span>]].<span class="fn">Add</span>(e[<span class="num">1</span>]);
+
+    <span class="kw">int</span>[] state=<span class="kw">new int</span>[n]; <span class="kw">bool</span> cycle=<span class="kw">false</span>;
+    <span class="kw">var</span> stack=<span class="kw">new</span> <span class="type">Stack</span>&lt;<span class="kw">int</span>&gt;();
+
+    <span class="kw">for</span> (<span class="kw">int</span> i=<span class="num">0</span>;i&lt;n;i++) <span class="kw">if</span> (state[i]==<span class="num">0</span>) <span class="fn">Dfs</span>(i);
+    <span class="kw">return</span> cycle ? <span class="type">Array</span>.Empty&lt;<span class="kw">int</span>&gt;() : stack.<span class="fn">ToArray</span>();
+
+    <span class="kw">void</span> <span class="fn">Dfs</span>(<span class="kw">int</span> u)
+    {
+        <span class="kw">if</span> (cycle) <span class="kw">return</span>;
+        state[u]=<span class="num">1</span>;
+        <span class="kw">foreach</span> (<span class="kw">int</span> v <span class="kw">in</span> adj[u])
+        {
+            <span class="kw">if</span> (state[v]==<span class="num">1</span>) { cycle=<span class="kw">true</span>; <span class="kw">return</span>; }
+            <span class="kw">if</span> (state[v]==<span class="num">0</span>) <span class="fn">Dfs</span>(v);
+        }
+        state[u]=<span class="num">2</span>; stack.<span class="fn">Push</span>(u); <span class="cmt">// push after all descendants</span>
+    }
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Prerequisite resolution in any order</li><li>Cycle detection in directed graphs</li><li>Build order, task scheduling with dependencies</li><li>Alien dictionary — infer ordering from string comparisons</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Graph has cycles → Topo Sort undefined, detect cycle first</li><li>Undirected connectivity → DSU or DFS/BFS</li><li>All valid orderings → backtrack over partial topo orders</li><li>Shortest path → BFS or Dijkstra</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Is the graph undirected? → Topo sort only works on DAGs (directed acyclic graphs). For undirected: DFS for connectivity, DSU for dynamic edge queries.</span></div><div class="ti"><span>Q2</span><span>Problem mentions 'can you complete all tasks'? → That's cycle detection. Kahn's naturally detects: if result.Count < n, a cycle exists preventing completion.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">207. Course Schedule</span><span class="pt">210. Course Schedule II</span><span class="pt">269. Alien Dictionary</span><span class="pt">444. Sequence Reconstruction</span><span class="pt">310. Min Height Trees</span><span class="pt">802. Find Eventual Safe States</span></div></div>
+</div></div>
+</div><div class="card" id="p14">
+<button class="card-toggle" onclick="tc('p14')">
+  <div class="tl">
+    <div class="num" style="color:#74b9ff;border-color:#74b9ff">14</div>
+    <div><div class="pname">Trie (Prefix Tree)</div><div class="psub">O(L) prefix operations — autocomplete, dictionary search, and XOR problems</div></div>
+  </div>
+  <div class="tags"><span class="tag">O(L) insert/search</span><span class="tag">O(n×L) space</span><span class="tag">prefix matching</span></div>
+  <span class="chev">▼</span>
+</button>
+<div class="card-body"><div class="inner">
+  <div class="ir"><div class="ib"><div class="ibl">Insert/Search</div><div class="ibv">O(L) per word</div></div><div class="ib"><div class="ibl">Space</div><div class="ibv">O(n × L)</div></div><div class="ib"><div class="ibl">L</div><div class="ibv">= word length</div></div></div>
+  <div class="sec"><div class="sec-label">When to Use</div>
+    <div class="sg">
+      <div class="sb"><h4 style="color:var(--accent3)">Strong Signals ✓</h4><ul><li>Autocomplete and prefix-based search</li><li>Word dictionary with startsWith queries (Design Add & Search)</li><li>Word Search II — backtracking pruned by trie</li><li>Longest common prefix of many strings</li><li>XOR maximization using binary trie</li></ul></div>
+      <div class="sb"><h4 style="color:var(--accent4)">Avoid When ✗</h4><ul><li>Single exact match → HashMap is O(1) and simpler</li><li>Suffix queries → Suffix Array or Reverse Trie</li><li>Memory constrained — trie uses more space than HashMap</li><li>No prefix structure needed → HashSet</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">Variants</div><div class="vcard open" id="p14-v1">
+<button class="vtoggle" onclick="tv('p14-v1')"><span class="vname">Trie from Scratch<span class="vbadge">Implement This in Interviews</span></span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Each TrieNode stores children (Dictionary or array[26]) and an IsEnd flag. Insert: create nodes level by level. Search: traverse nodes. StartsWith: traverse and check if path exists.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public class</span> <span class="type">TrieNode</span>
+{
+    <span class="kw">public</span> <span class="type">TrieNode</span>[] Children = <span class="kw">new</span> <span class="type">TrieNode</span>[<span class="num">26</span>];
+    <span class="kw">public bool</span> IsEnd;
+}
+
+<span class="kw">public class</span> <span class="type">Trie</span>
+{
+    <span class="kw">private readonly</span> <span class="type">TrieNode</span> _root = <span class="kw">new</span>();
+
+    <span class="kw">public void</span> <span class="fn">Insert</span>(<span class="kw">string</span> word)
+    {
+        <span class="kw">var</span> node = _root;
+        <span class="kw">foreach</span> (<span class="kw">char</span> c <span class="kw">in</span> word)
+        {
+            <span class="kw">int</span> i = c - <span class="str">'a'</span>;
+            node.Children[i] ??= <span class="kw">new</span> <span class="type">TrieNode</span>();
+            node = node.Children[i];
+        }
+        node.IsEnd = <span class="kw">true</span>;
+    }
+
+    <span class="kw">public bool</span> <span class="fn">Search</span>(<span class="kw">string</span> word)
+    {
+        <span class="kw">var</span> node = <span class="fn">GetNode</span>(word);
+        <span class="kw">return</span> node!=<span class="kw">null</span> &amp;&amp; node.IsEnd;
+    }
+
+    <span class="kw">public bool</span> <span class="fn">StartsWith</span>(<span class="kw">string</span> prefix) =&gt; <span class="fn">GetNode</span>(prefix)!=<span class="kw">null</span>;
+
+    <span class="kw">private</span> <span class="type">TrieNode</span>? <span class="fn">GetNode</span>(<span class="kw">string</span> s)
+    {
+        <span class="kw">var</span> node=_root;
+        <span class="kw">foreach</span> (<span class="kw">char</span> c <span class="kw">in</span> s)
+        {
+            node=node.Children[c-<span class="str">'a'</span>];
+            <span class="kw">if</span> (node==<span class="kw">null</span>) <span class="kw">return null</span>;
+        }
+        <span class="kw">return</span> node;
+    }
+}</pre></div></div>
+</div><div class="vcard" id="p14-v2">
+<button class="vtoggle" onclick="tv('p14-v2')"><span class="vname">Word Search II — Trie + Backtracking</span><span class="vchev">▼</span></button>
+<div class="vbody"><div class="vdesc">Build a trie from all words. DFS the grid. At each cell, follow the trie node — if no child exists, prune immediately. When IsEnd is true, record the word and set IsEnd=false to avoid duplicates. Remove word from trie once found to continue pruning.</div><div class="cb"><div class="ch"><span class="cl">C#</span><button class="cpb" onclick="cc(this)">COPY</button></div><pre><span class="kw">public</span> <span class="type">IList</span>&lt;<span class="kw">string</span>&gt; <span class="fn">FindWords</span>(<span class="kw">char</span>[][] board, <span class="kw">string</span>[] words)
+{
+    <span class="kw">var</span> root=<span class="kw">new</span> <span class="type">TrieNode</span>();
+    <span class="kw">foreach</span> (<span class="kw">var</span> w <span class="kw">in</span> words)
+    {
+        <span class="kw">var</span> n=root;
+        <span class="kw">foreach</span> (<span class="kw">char</span> c <span class="kw">in</span> w)
+        { n.Children[c-<span class="str">'a'</span>]??=<span class="kw">new</span> <span class="type">TrieNode</span>(); n=n.Children[c-<span class="str">'a'</span>]; }
+        n.IsEnd=<span class="kw">true</span>;
+    }
+
+    <span class="kw">var</span> res=<span class="kw">new</span> <span class="type">List</span>&lt;<span class="kw">string</span>&gt;();
+    <span class="kw">int</span> m=board.Length, n2=board[<span class="num">0</span>].Length;
+
+    <span class="kw">void</span> <span class="fn">Dfs</span>(<span class="kw">int</span> r, <span class="kw">int</span> c, <span class="type">TrieNode</span> node, <span class="type">StringBuilder</span> sb)
+    {
+        <span class="kw">if</span> (r&lt;<span class="num">0</span>||r&gt;=m||c&lt;<span class="num">0</span>||c&gt;=n2) <span class="kw">return</span>;
+        <span class="kw">char</span> ch=board[r][c];
+        <span class="kw">if</span> (ch=='<span class="str">#</span>'||node.Children[ch-<span class="str">'a'</span>]==<span class="kw">null</span>) <span class="kw">return</span>;
+        node=node.Children[ch-<span class="str">'a'</span>];
+        sb.<span class="fn">Append</span>(ch); board[r][c]=<span class="str">'#'</span>;
+        <span class="kw">if</span> (node.IsEnd) { res.<span class="fn">Add</span>(sb.<span class="fn">ToString</span>()); node.IsEnd=<span class="kw">false</span>; }
+        <span class="fn">Dfs</span>(r+<span class="num">1</span>,c,node,sb); <span class="fn">Dfs</span>(r-<span class="num">1</span>,c,node,sb);
+        <span class="fn">Dfs</span>(r,c+<span class="num">1</span>,node,sb); <span class="fn">Dfs</span>(r,c-<span class="num">1</span>,node,sb);
+        board[r][c]=ch; sb.<span class="fn">Remove</span>(sb.Length-<span class="num">1</span>,<span class="num">1</span>);
+    }
+
+    <span class="kw">for</span> (<span class="kw">int</span> r=<span class="num">0</span>;r&lt;m;r++) <span class="kw">for</span> (<span class="kw">int</span> c=<span class="num">0</span>;c&lt;n2;c++)
+        <span class="fn">Dfs</span>(r,c,root,<span class="kw">new</span> <span class="type">StringBuilder</span>());
+    <span class="kw">return</span> res;
+}</pre></div></div>
+</div></div>
+  <div class="sec"><div class="sec-label">Decision Guide</div>
+    <div class="dg">
+      <div class="db prefer"><h4>Use this pattern when</h4><ul><li>Prefix-based search or autocomplete needed</li><li>Dictionary with startsWith operation</li><li>Prune DFS grid search (Word Search II)</li><li>XOR maximization with binary trie</li></ul></div>
+      <div class="db instead"><h4>Prefer another when</h4><ul><li>Single exact match → HashMap is O(1) and simpler</li><li>Suffix queries → reverse the string, then use trie</li><li>No prefix structure in problem → HashSet suffices</li><li>Memory constrained → compressed trie or HashMap trie</li></ul></div>
+    </div>
+  </div>
+  <div class="sec"><div class="sec-label">If Pattern Does Not Apply — Pivot Thinking</div><div class="tb"><h4>Decision Framework</h4><div class="ti"><span>Q1</span><span>Problem about suffixes, not prefixes? → Reverse the string and insert into a trie. Or use a Suffix Array for more complex suffix queries.</span></div><div class="ti"><span>Q2</span><span>Large alphabet (not just a-z)? → Use Dictionary<char, TrieNode> instead of array[26]. Slightly slower but handles unicode.</span></div></div></div>
+  <div class="sec"><div class="sec-label">Practice Problems</div><div class="pg"><span class="pt">208. Implement Trie</span><span class="pt">211. Design Add & Search Words</span><span class="pt">212. Word Search II</span><span class="pt">421. Max XOR of Two Numbers</span><span class="pt">1268. Search Suggestions System</span><span class="pt">745. Prefix and Suffix Search</span></div></div>
+</div></div>
+</div>
+</div>
+<div class="scroll-top" id="st" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</div>
+<script>
+function tc(id){document.getElementById(id).classList.toggle('open');}
+function tv(id){document.getElementById(id).classList.toggle('open');}
+async function cc(btn){
+  const pre=btn.closest('.cb').querySelector('pre');
+  try{await navigator.clipboard.writeText(pre.innerText);}
+  catch{const t=document.createElement('textarea');t.value=pre.innerText;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);}
+  btn.textContent='COPIED!';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='COPY';btn.classList.remove('copied');},1800);
+}
+window.addEventListener('scroll',()=>document.getElementById('st').classList.toggle('visible',window.scrollY>400));
+document.getElementById('p1').classList.add('open');
+</script>
+</body>
+</html>
