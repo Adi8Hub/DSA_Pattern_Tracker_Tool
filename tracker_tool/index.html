@@ -9,6 +9,7 @@
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 body{background:#0D1117;color:#E6EDF3;font-family:'JetBrains Mono','Fira Code',monospace}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-track{background:#0D1117}
@@ -625,7 +626,520 @@ int[] TopoSortDfs(int n, int[][] edges) {
 }`,
 pairs:["BFS (Kahn's)","DFS","Dynamic Programming on DAG"],
 problems:["Course Schedule","Course Schedule II","Alien Dictionary","Sequence Reconstruction","Build a Matrix With Conditions"],
-trick:"order.Length < n → cycle exists. Kahn's is easier to code. DFS reverses post-order."},
+trick:"order.Length < n → cycle exists. Kahn's is easier to code. DFS reverses post-order."}
+,
+{id:15,name:"Trees",emoji:"🌳",rank:"⭐ Most Common",color:"#6BCB77",bg:"#6BCB7715",border:"#6BCB7740",tc:"O(n)",sc:"O(h)",
+identify:["Binary tree / BST operations","Keywords: 'height', 'depth', 'diameter', 'ancestor', 'path sum'","Recursive structure where left/right subtrees matter","Level-order, in-order, pre-order, post-order traversal"],
+whenToUse:"Use for any problem involving a tree structure. Most tree problems use DFS (recursion) naturally. BFS for level-order. Key insight: most tree problems = define what to return from each node and combine results.",
+types:["Binary Tree DFS (pre/in/post order)","Binary Search Tree (BST) operations","Level Order BFS","Path problems (root-to-leaf, any-to-any)","LCA / Ancestor queries"],
+template:`// Universal DFS tree template
+int Solve(TreeNode node) {
+    if (node == null) return BASE_CASE; // define base
+    int left  = Solve(node.left);
+    int right = Solve(node.right);
+    // combine left, right, node.val → answer
+    return COMBINE(left, right, node.val);
+}
+
+// Max depth
+int MaxDepth(TreeNode root) {
+    if (root == null) return 0;
+    return 1 + Math.Max(MaxDepth(root.left), MaxDepth(root.right));
+}
+
+// Path sum (root to leaf)
+bool HasPathSum(TreeNode root, int target) {
+    if (root == null) return false;
+    if (root.left == null && root.right == null) return root.val == target;
+    return HasPathSum(root.left, target - root.val)
+        || HasPathSum(root.right, target - root.val);
+}
+
+// Lowest Common Ancestor
+TreeNode LCA(TreeNode root, TreeNode p, TreeNode q) {
+    if (root == null || root == p || root == q) return root;
+    var left  = LCA(root.left,  p, q);
+    var right = LCA(root.right, p, q);
+    return left != null && right != null ? root : left ?? right;
+}
+
+// BST: validate
+bool IsValidBST(TreeNode root, long min = long.MinValue, long max = long.MaxValue) {
+    if (root == null) return true;
+    if (root.val <= min || root.val >= max) return false;
+    return IsValidBST(root.left, min, root.val)
+        && IsValidBST(root.right, root.val, max);
+}`,
+pairs:["BFS (level order)","DFS","Prefix Sum (path sum problems)","Dynamic Programming (tree DP)"],
+problems:["104. Maximum Depth","226. Invert Binary Tree","543. Diameter of Binary Tree","124. Binary Tree Max Path Sum","236. Lowest Common Ancestor","98. Validate BST","105. Construct from Preorder+Inorder"],
+trick:"Return what each subtree needs to report upward. For path-through-root problems: answer may pass through root (left + right + root.val). Use a global variable for this case."},
+
+{id:16,name:"Intervals",emoji:"📏",rank:"⭐ Common",color:"#FF6B9D",bg:"#FF6B9D15",border:"#FF6B9D40",tc:"O(n log n)",sc:"O(n)",
+identify:["Array of [start, end] pairs","Keywords: 'merge overlapping', 'insert interval', 'meeting rooms'","Scheduling problems with start/end times","Non-overlapping interval count"],
+whenToUse:"Sort by start time, then sweep. Two intervals [a,b] and [c,d] overlap if a <= d && c <= b. Greedy after sorting almost always works.",
+types:["Merge Overlapping Intervals","Insert New Interval","Minimum Meeting Rooms (active intervals)","Non-overlapping Intervals (greedy remove)","Interval Scheduling Maximization"],
+template:`// Merge overlapping intervals
+int[][] Merge(int[][] intervals) {
+    Array.Sort(intervals, (a,b) => a[0] - b[0]); // sort by start
+    var result = new List<int[]> { intervals[0] };
+    foreach (var cur in intervals.Skip(1)) {
+        var last = result[^1];
+        if (cur[0] <= last[1]) last[1] = Math.Max(last[1], cur[1]); // overlap
+        else result.Add(cur);
+    }
+    return result.ToArray();
+}
+
+// Minimum meeting rooms (max concurrent intervals)
+int MinMeetingRooms(int[][] intervals) {
+    var starts = intervals.Select(i => i[0]).OrderBy(x=>x).ToArray();
+    var ends   = intervals.Select(i => i[1]).OrderBy(x=>x).ToArray();
+    int rooms = 0, maxRooms = 0, e = 0;
+    for (int s = 0; s < starts.Length; s++) {
+        if (starts[s] < ends[e]) rooms++; // new meeting started
+        else e++;                          // one ended, reuse room
+        maxRooms = Math.Max(maxRooms, rooms);
+    }
+    return maxRooms;
+}
+
+// Non-overlapping — min removals to make non-overlapping
+int EraseOverlapIntervals(int[][] intervals) {
+    Array.Sort(intervals, (a,b) => a[1] - b[1]); // sort by END
+    int removed = 0, prevEnd = int.MinValue;
+    foreach (var iv in intervals) {
+        if (iv[0] >= prevEnd) prevEnd = iv[1]; // keep
+        else removed++;                          // overlap → remove
+    }
+    return removed;
+}`,
+pairs:["Sorting","Greedy","Heap (meeting rooms with priority queue)","Line Sweep"],
+problems:["56. Merge Intervals","57. Insert Interval","435. Non-overlapping Intervals","252. Meeting Rooms","253. Meeting Rooms II","986. Interval List Intersections"],
+trick:"Sort by start for merge/insert. Sort by end for greedy keep/remove (activity selection). Use a min-heap on end times for meeting rooms."},
+
+{id:17,name:"Greedy",emoji:"💰",rank:"⭐ Common",color:"#FFB347",bg:"#FFB34715",border:"#FFB34740",tc:"O(n log n)",sc:"O(1)",
+identify:["Local optimal choice leads to global optimum","Keywords: 'minimum cost', 'maximum profit', 'minimum operations'","Exchange argument: swapping any two adjacent choices doesn't improve answer","Sorting + sweep usually works"],
+whenToUse:"Try greedy when: (1) you can sort the input and process in one pass, (2) an exchange argument shows swapping never helps, (3) DP would work but greedy suffices. If counterexample exists → use DP instead.",
+types:["Activity Selection (sort by end)","Jump Game variants","Gas Station / Circular","Candy / Task Scheduler","Huffman / min-cost operations"],
+template:`// Jump Game — can you reach end?
+bool CanJump(int[] nums) {
+    int reach = 0;
+    for (int i = 0; i < nums.Length; i++) {
+        if (i > reach) return false; // gap
+        reach = Math.Max(reach, i + nums[i]);
+    }
+    return true;
+}
+
+// Jump Game II — min jumps
+int Jump(int[] nums) {
+    int jumps = 0, curEnd = 0, farthest = 0;
+    for (int i = 0; i < nums.Length - 1; i++) {
+        farthest = Math.Max(farthest, i + nums[i]);
+        if (i == curEnd) { jumps++; curEnd = farthest; } // must jump
+    }
+    return jumps;
+}
+
+// Gas Station — can complete circuit?
+int CanCompleteCircuit(int[] gas, int[] cost) {
+    int total = 0, tank = 0, start = 0;
+    for (int i = 0; i < gas.Length; i++) {
+        int diff = gas[i] - cost[i];
+        total += diff; tank += diff;
+        if (tank < 0) { start = i + 1; tank = 0; } // restart
+    }
+    return total >= 0 ? start : -1;
+}`,
+pairs:["Sorting","Dynamic Programming (verify greedy works)","Intervals","Heap"],
+problems:["55. Jump Game","45. Jump Game II","134. Gas Station","135. Candy","406. Queue Reconstruction by Height","763. Partition Labels"],
+trick:"Prove greedy with exchange argument: assume optimal differs from greedy, show swapping toward greedy never worsens the answer. If you can't prove it → use DP."},
+
+{id:18,name:"Bit Manipulation",emoji:"⚡",rank:"📌 Specialized",color:"#C77DFF",bg:"#C77DFF15",border:"#C77DFF40",tc:"O(n)",sc:"O(1)",
+identify:["Keywords: 'XOR', 'single number', 'bit', 'power of 2'","Problems where duplicates cancel (XOR)","Checking/setting/clearing specific bits","Subset enumeration using bitmask"],
+whenToUse:"Use when the problem involves binary representation, duplicate detection via XOR, subset enumeration, or power-of-two checks. Often gives O(1) space vs O(n) hash set.",
+types:["XOR tricks (find single/missing number)","Bit masking (check/set/clear/toggle)","Power of 2 checks","Bitmask DP (subset enumeration)","Brian Kernighan (count set bits)"],
+template:`// Core bit operations
+bool IsBitSet(int n, int k)  => (n >> k & 1) == 1;
+int  SetBit(int n, int k)    => n | (1 << k);
+int  ClearBit(int n, int k)  => n & ~(1 << k);
+int  ToggleBit(int n, int k) => n ^ (1 << k);
+bool IsPowerOfTwo(int n)     => n > 0 && (n & (n-1)) == 0;
+int  LowBit(int n)           => n & (-n);   // lowest set bit
+
+// Count set bits (Brian Kernighan)
+int CountBits(int n) {
+    int count = 0;
+    while (n != 0) { n &= n - 1; count++; } // clears lowest set bit
+    return count;
+}
+
+// XOR: find single number (all others appear twice)
+int SingleNumber(int[] nums) => nums.Aggregate(0, (a, b) => a ^ b);
+
+// XOR: find missing number in [0..n]
+int MissingNumber(int[] nums) {
+    int xor = nums.Length;
+    for (int i = 0; i < nums.Length; i++) xor ^= i ^ nums[i];
+    return xor;
+}
+
+// Bitmask DP — enumerate all subsets
+void SubsetDP(int n) {
+    int[] dp = new int[1 << n]; // 2^n states
+    for (int mask = 0; mask < (1 << n); mask++)
+        for (int i = 0; i < n; i++)
+            if ((mask >> i & 1) == 1) // bit i is set in mask
+                ; // dp[mask] = f(dp[mask ^ (1<<i)], i)
+}`,
+pairs:["Dynamic Programming (bitmask DP)","Hash Map (alternative to XOR tricks)"],
+problems:["136. Single Number","191. Number of 1 Bits","338. Counting Bits","190. Reverse Bits","268. Missing Number","318. Max Product of Word Lengths"],
+trick:"XOR cancels duplicates: a^a=0, a^0=a. Power of 2: n&(n-1)==0. To enumerate all subsets of a set: for(int s=mask;s>0;s=(s-1)&mask)."},
+
+{id:19,name:"Segment Tree / BIT",emoji:"🌲",rank:"📌 Advanced",color:"#00B4D8",bg:"#00B4D815",border:"#00B4D840",tc:"O(log n)",sc:"O(n)",
+identify:["Range query + point/range update on array","Keywords: 'range sum with updates', 'range min/max query'","Prefix sum won't work because array is mutable","Need both O(log n) update AND O(log n) query"],
+whenToUse:"Use Binary Indexed Tree (BIT/Fenwick) for prefix sum with point updates. Use Segment Tree for range queries with range updates. If array is static → Prefix Sum is simpler.",
+types:["BIT: Point Update + Prefix Sum Query","Segment Tree: Range Query + Point Update","Segment Tree with Lazy Propagation (range update)","2D BIT for 2D range queries"],
+template:`// Binary Indexed Tree (Fenwick Tree) — point update, prefix sum query
+public class BIT {
+    int[] tree; int n;
+    public BIT(int n) { this.n = n; tree = new int[n + 1]; }
+
+    public void Update(int i, int delta) { // 1-indexed
+        for (; i <= n; i += i & (-i)) tree[i] += delta;
+    }
+    public int Query(int i) { // prefix sum [1..i]
+        int s = 0;
+        for (; i > 0; i -= i & (-i)) s += tree[i];
+        return s;
+    }
+    public int Query(int l, int r) => Query(r) - Query(l - 1);
+}
+
+// Segment Tree — range sum, point update
+public class SegTree {
+    int[] tree; int n;
+    public SegTree(int[] arr) {
+        n = arr.Length; tree = new int[4 * n];
+        Build(arr, 0, 0, n - 1);
+    }
+    void Build(int[] a, int node, int s, int e) {
+        if (s == e) { tree[node] = a[s]; return; }
+        int mid = (s + e) / 2;
+        Build(a, 2*node+1, s, mid); Build(a, 2*node+2, mid+1, e);
+        tree[node] = tree[2*node+1] + tree[2*node+2];
+    }
+    public void Update(int idx, int val, int node=0, int s=0, int e=-1) {
+        if (e == -1) e = n - 1;
+        if (s == e) { tree[node] = val; return; }
+        int mid = (s + e) / 2;
+        if (idx <= mid) Update(idx, val, 2*node+1, s, mid);
+        else            Update(idx, val, 2*node+2, mid+1, e);
+        tree[node] = tree[2*node+1] + tree[2*node+2];
+    }
+    public int Query(int l, int r, int node=0, int s=0, int e=-1) {
+        if (e == -1) e = n - 1;
+        if (r < s || e < l) return 0;
+        if (l <= s && e <= r) return tree[node];
+        int mid = (s + e) / 2;
+        return Query(l,r,2*node+1,s,mid) + Query(l,r,2*node+2,mid+1,e);
+    }
+}`,
+pairs:["Prefix Sum (static version)","Divide & Conquer","Merge Sort (count inversions via BIT)"],
+problems:["307. Range Sum Query Mutable","315. Count of Smaller Numbers After Self","327. Count of Range Sum","493. Reverse Pairs","218. The Skyline Problem"],
+trick:"BIT: i += i&(-i) to update, i -= i&(-i) to query. Segment tree nodes: left=2i+1, right=2i+2 (0-indexed). BIT is simpler to code; use it unless you need range updates (then use lazy segment tree)."},
+
+{id:20,name:"Line Sweep",emoji:"🧹",rank:"📌 Advanced",color:"#F72585",bg:"#F7258515",border:"#F7258540",tc:"O(n log n)",sc:"O(n)",
+identify:["Events happen at specific x-coordinates (or time points)","Keywords: 'skyline', 'rectangle area', 'meeting rooms', 'calendar'","Need to track what's 'active' as you scan left to right","Intervals with associated values (height, weight, priority)"],
+whenToUse:"Convert the problem into events (start/end points), sort by x-coordinate, and sweep left to right maintaining a data structure (heap, multiset, counter) of active elements.",
+types:["Skyline Problem (max-height sweep)","Rectangle Union Area","Calendar / Meeting Rooms","Coordinate Compression + BIT","Count Visible Points"],
+template:`// Line Sweep template
+// 1. Create events: (x, type, value) where type = +1 (start) or -1 (end)
+// 2. Sort events by x; for ties: starts before ends (or vice versa per problem)
+// 3. Sweep: maintain active set, answer query at each event
+
+// Example: Meeting Rooms II (min rooms)
+int MinRooms(int[][] intervals) {
+    var events = new List<(int time, int type)>();
+    foreach (var iv in intervals) {
+        events.Add((iv[0], 1));  // start
+        events.Add((iv[1], -1)); // end
+    }
+    events.Sort((a,b) => a.time != b.time ? a.time - b.time : a.type - b.type);
+    int active = 0, maxActive = 0;
+    foreach (var (_, type) in events) {
+        active += type;
+        maxActive = Math.Max(maxActive, active);
+    }
+    return maxActive;
+}
+
+// Skyline Problem
+IList<IList<int>> GetSkyline(int[][] buildings) {
+    var events = new List<(int x, int h)>();
+    foreach (var b in buildings) {
+        events.Add((b[0], -b[2])); // start: negative height (sort first)
+        events.Add((b[1],  b[2])); // end:   positive
+    }
+    events.Sort((a,b) => a.x != b.x ? a.x - b.x : a.h - b.h);
+    var result = new List<IList<int>>();
+    var heights = new SortedDictionary<int,int> { [0] = 1 }; // active heights
+    int prevMax = 0;
+    foreach (var (x, h) in events) {
+        if (h < 0) { // building starts
+            heights[-h] = heights.GetValueOrDefault(-h) + 1;
+        } else {     // building ends
+            if (--heights[h] == 0) heights.Remove(h);
+        }
+        int curMax = heights.Keys.Max();
+        if (curMax != prevMax) { result.Add(new[]{x, curMax}); prevMax = curMax; }
+    }
+    return result;
+}`,
+pairs:["Heap / Priority Queue","Segment Tree / BIT","Intervals","Sorting"],
+problems:["218. The Skyline Problem","253. Meeting Rooms II","850. Rectangle Area II","759. Employee Free Time","1229. Meeting Scheduler"],
+trick:"Encode start as negative height so starts sort before ends at same x. Use SortedDictionary or max-heap to track current maximum active height. Coordinate compress large ranges onto [0..2n]."},
+
+{id:21,name:"Graph Advanced",emoji:"🕸️",rank:"📌 Advanced",color:"#9B5DE5",bg:"#9B5DE515",border:"#9B5DE540",tc:"O(V+E) to O(E log V)",sc:"O(V+E)",
+identify:["Weighted shortest path (not just BFS)","Keywords: 'cheapest', 'minimum cost path', 'negative weights'","Strongly connected components","Minimum spanning tree"],
+whenToUse:"Dijkstra for non-negative weighted shortest path. Bellman-Ford for negative weights. Floyd-Warshall for all-pairs. Kruskal/Prim for MST. Tarjan/Kosaraju for SCC.",
+types:["Dijkstra (non-negative weights)","Bellman-Ford (negative weights/cycles)","Floyd-Warshall (all-pairs shortest path)","Kruskal MST (sort edges + Union-Find)","Tarjan SCC / Bridges / Articulation Points"],
+template:`// Dijkstra — O((V+E) log V)
+int[] Dijkstra(List<(int to, int w)>[] graph, int src) {
+    int n = graph.Length;
+    int[] dist = Enumerable.Repeat(int.MaxValue, n).ToArray();
+    dist[src] = 0;
+    var pq = new PriorityQueue<(int d, int u), int>();
+    pq.Enqueue((0, src), 0);
+    while (pq.Count > 0) {
+        var (d, u) = pq.Dequeue();
+        if (d > dist[u]) continue; // stale entry
+        foreach (var (v, w) in graph[u]) {
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.Enqueue((dist[v], v), dist[v]);
+            }
+        }
+    }
+    return dist;
+}
+
+// Bellman-Ford — O(V*E), handles negative weights
+int[] BellmanFord(int n, int[][] edges, int src) {
+    int[] dist = Enumerable.Repeat(int.MaxValue/2, n).ToArray();
+    dist[src] = 0;
+    for (int i = 0; i < n - 1; i++)
+        foreach (var e in edges)
+            if (dist[e[0]] + e[2] < dist[e[1]])
+                dist[e[1]] = dist[e[0]] + e[2];
+    return dist;
+}
+
+// Kruskal MST — O(E log E)
+int KruskalMST(int n, int[][] edges) {
+    Array.Sort(edges, (a,b) => a[2] - b[2]); // sort by weight
+    var uf = new UnionFind(n);
+    int cost = 0;
+    foreach (var e in edges)
+        if (uf.Union(e[0], e[1])) cost += e[2];
+    return cost;
+}`,
+pairs:["Union-Find (Kruskal)","Heap / Priority Queue (Dijkstra)","Topological Sort","BFS/DFS"],
+problems:["743. Network Delay Time","787. Cheapest Flights K Stops","1334. Find City with Smallest Neighbors","1584. Min Cost to Connect Points","332. Reconstruct Itinerary","1192. Critical Connections"],
+trick:"Dijkstra: skip stale pq entries with if(d>dist[u]) continue. Kruskal: sort edges by weight, union greedily. For 'at most K stops' → use Bellman-Ford K times or modified Dijkstra with state (node, stops)."},
+
+{id:22,name:"Two Heaps / Sliding Window Median",emoji:"⚖️",rank:"📌 Advanced",color:"#F4A261",bg:"#F4A26115",border:"#F4A26140",tc:"O(n log n)",sc:"O(n)",
+identify:["Find median dynamically as elements are added/removed","Keywords: 'median', 'balance', 'lower half / upper half'","Sliding window median (window moves, elements enter and leave)","Problems needing simultaneous min and max tracking"],
+whenToUse:"Two heaps split data at the median. Max-heap for lower half, min-heap for upper half, size difference ≤ 1. Median is always at one of the tops. For sliding window: use lazy deletion with a hash map.",
+types:["Stream Median (static insertions)","Sliding Window Median (add + remove)","IPO / Task Profit Maximization","Lazy Deletion Heap"],
+template:`// Find Median from Data Stream
+var lo = new PriorityQueue<int,int>(); // max-heap (lower half) — negate priority
+var hi = new PriorityQueue<int,int>(); // min-heap (upper half)
+
+void AddNum(int num) {
+    lo.Enqueue(num, -num); // always add to lo first
+    hi.Enqueue(lo.Peek(), lo.Peek()); lo.Dequeue(); // balance: push lo.top to hi
+    if (hi.Count > lo.Count) { // keep lo >= hi
+        int v = hi.Dequeue(); lo.Enqueue(v, -v);
+    }
+}
+double FindMedian() =>
+    lo.Count > hi.Count ? lo.Peek() : (lo.Peek() + hi.Peek()) / 2.0;
+
+// Sliding Window Median — lazy deletion
+double[] SlidingWindowMedian(int[] nums, int k) {
+    var loH = new SortedList<(int val, int idx), int>(); // max side
+    var hiH = new SortedList<(int val, int idx), int>(); // min side
+    // (simplified: use two sorted sets + lazy delete in real impl)
+    // Key idea: when element leaves window, mark deleted; skip on peek
+    return Array.Empty<double>(); // implementation varies
+}`,
+pairs:["Heap / Priority Queue","Sliding Window","Sorting"],
+problems:["295. Find Median from Data Stream","480. Sliding Window Median","502. IPO","621. Task Scheduler"],
+trick:"Always add to lo (max-heap), immediately push lo.top to hi, then rebalance sizes. For sliding window median: use two multisets (SortedList) and rebalance on each slide."},
+
+{id:23,name:"Math & Number Theory",emoji:"🔢",rank:"📌 Specialized",color:"#06D6A0",bg:"#06D6A015",border:"#06D6A040",tc:"O(√n) to O(n log log n)",sc:"O(n)",
+identify:["Prime numbers, GCD, LCM, modular arithmetic","Keywords: 'prime', 'factorial', 'power', 'divisors', 'mod'","Counting problems with large numbers (return mod 10^9+7)","Digit DP or digit counting problems"],
+whenToUse:"Use GCD/LCM for fraction problems. Use Sieve of Eratosthenes for prime queries. Use fast exponentiation for large powers. Use modular arithmetic when answer requires mod p.",
+types:["GCD / LCM","Sieve of Eratosthenes","Fast Exponentiation (Binary Exponentiation)","Modular Arithmetic","Combinatorics (nCr mod p)"],
+template:`// GCD and LCM
+int GCD(int a, int b) => b == 0 ? a : GCD(b, a % b);
+long LCM(long a, long b) => a / GCD((int)a, (int)b) * b;
+
+// Sieve of Eratosthenes — find all primes ≤ n
+bool[] Sieve(int n) {
+    var isPrime = new bool[n + 1]; Array.Fill(isPrime, true);
+    isPrime[0] = isPrime[1] = false;
+    for (int i = 2; i * i <= n; i++)
+        if (isPrime[i])
+            for (int j = i*i; j <= n; j += i) isPrime[j] = false;
+    return isPrime;
+}
+
+// Fast Exponentiation — a^b mod m in O(log b)
+long FastPow(long a, long b, long mod) {
+    long res = 1; a %= mod;
+    while (b > 0) {
+        if ((b & 1) == 1) res = res * a % mod;
+        a = a * a % mod; b >>= 1;
+    }
+    return res;
+}
+
+// Count digits
+int DigitCount(int n) => n == 0 ? 1 : (int)Math.Floor(Math.Log10(n)) + 1;
+
+// Check perfect square
+bool IsPerfectSquare(int n) { int s=(int)Math.Sqrt(n); return s*s==n; }`,
+pairs:["Dynamic Programming (digit DP)","Bit Manipulation","Binary Search"],
+problems:["204. Count Primes","50. Pow(x,n)","166. Fraction to Recurring Decimal","1137. Nth Tribonacci","279. Perfect Squares","878. Nth Magical Number"],
+trick:"MOD = 10^9+7. Always apply mod after each multiplication: (a*b)%mod. For nCr mod p: precompute factorials and inverse factorials using fast pow. GCD via Euclidean is O(log min(a,b))."},
+
+{id:24,name:"Hash Map / Counting",emoji:"🗺️",rank:"⭐ Most Common",color:"#48CAE4",bg:"#48CAE415",border:"#48CAE440",tc:"O(n)",sc:"O(n)",
+identify:["Need O(1) lookup for seen elements","Two-sum style: find complement in O(1)","Frequency counting (anagrams, character windows)","Group elements by a computed key"],
+whenToUse:"Default choice when you need to track seen values, count frequencies, or map one value to another. Often replaces O(n²) nested loops with O(n) single pass.",
+types:["Complement Lookup (Two Sum)","Frequency Map (Anagram, Top K)","Group by Key (Group Anagrams)","Rolling Hash (Rabin-Karp)","Coordinate Compression"],
+template:`// Two Sum — O(n) with hash map
+int[] TwoSum(int[] nums, int target) {
+    var seen = new Dictionary<int,int>(); // val → index
+    for (int i = 0; i < nums.Length; i++) {
+        int comp = target - nums[i];
+        if (seen.ContainsKey(comp)) return new[]{seen[comp], i};
+        seen[nums[i]] = i;
+    }
+    return new[]{-1,-1};
+}
+
+// Group Anagrams
+IList<IList<string>> GroupAnagrams(string[] strs) {
+    var map = new Dictionary<string, List<string>>();
+    foreach (var s in strs) {
+        var key = new string(s.OrderBy(c=>c).ToArray()); // sorted chars = key
+        if (!map.ContainsKey(key)) map[key] = new List<string>();
+        map[key].Add(s);
+    }
+    return map.Values.Cast<IList<string>>().ToList();
+}
+
+// Frequency map shorthand
+var freq = new Dictionary<char,int>();
+foreach (char c in s) freq[c] = freq.GetValueOrDefault(c) + 1;
+
+// Coordinate compression
+int[] Compress(int[] arr) {
+    var sorted = arr.Distinct().OrderBy(x=>x).ToArray();
+    var rank = sorted.Select((v,i)=>(v,i)).ToDictionary(x=>x.v, x=>x.i);
+    return arr.Select(x=>rank[x]).ToArray();
+}`,
+pairs:["Sliding Window","Prefix Sum","Sorting"],
+problems:["1. Two Sum","49. Group Anagrams","347. Top K Frequent Elements","242. Valid Anagram","560. Subarray Sum Equals K","128. Longest Consecutive Sequence"],
+trick:"GetValueOrDefault(key, 0) is cleaner than ContainsKey check. For anagram key: sort chars or use int[26] array as key. For LRU Cache: Dictionary + LinkedList gives O(1) get and put."},
+
+{id:25,name:"Stack / Queue Tricks",emoji:"📚",rank:"⭐ Common",color:"#E9C46A",bg:"#E9C46A15",border:"#E9C46A40",tc:"O(n)",sc:"O(n)",
+identify:["Valid parentheses / bracket matching","Implement queue using stacks (or vice versa)","Next greater/smaller element (→ Monotonic Stack)","Keywords: 'LIFO order', 'undo', 'nested structure'"],
+whenToUse:"Stack for LIFO: bracket matching, expression evaluation, undo operations. Queue for FIFO: BFS, sliding window with order. Deque for both ends. Monotonic variants for NGE problems.",
+types:["Bracket Matching","Expression Evaluation (infix/postfix)","Decode String (nested)","Implement Stack using Queue / vice versa","Min Stack / Max Stack"],
+template:`// Valid Parentheses
+bool IsValid(string s) {
+    var stack = new Stack<char>();
+    foreach (char c in s) {
+        if (c=='('||c=='['||c=='{') stack.Push(c);
+        else {
+            if (stack.Count==0) return false;
+            char top = stack.Pop();
+            if (c==')' && top!='(') return false;
+            if (c==']' && top!='[') return false;
+            if (c=='}' && top!='{') return false;
+        }
+    }
+    return stack.Count == 0;
+}
+
+// Min Stack — O(1) getMin
+public class MinStack {
+    Stack<int> stack = new(), minStack = new();
+    public void Push(int v) { stack.Push(v); minStack.Push(Math.Min(v, minStack.Count>0?minStack.Peek():v)); }
+    public void Pop() { stack.Pop(); minStack.Pop(); }
+    public int Top() => stack.Peek();
+    public int GetMin() => minStack.Peek();
+}
+
+// Decode String: 3[a2[bc]] → abcbcabcbcabcbc
+string DecodeString(string s) {
+    var countStack = new Stack<int>(); var strStack = new Stack<string>();
+    string cur = ""; int k = 0;
+    foreach (char c in s) {
+        if (char.IsDigit(c)) k = k*10 + (c-'0');
+        else if (c == '[') { countStack.Push(k); strStack.Push(cur); k=0; cur=""; }
+        else if (c == ']') { int n=countStack.Pop(); cur=strStack.Pop()+string.Concat(Enumerable.Repeat(cur,n)); }
+        else cur += c;
+    }
+    return cur;
+}`,
+pairs:["Monotonic Stack","BFS (queue)","DFS (stack)","Hash Map"],
+problems:["20. Valid Parentheses","155. Min Stack","394. Decode String","150. Evaluate Reverse Polish Notation","84. Largest Rectangle in Histogram","239. Sliding Window Maximum"],
+trick:"Min stack: push current min alongside each element. For bracket matching: use a map of closing→opening to simplify. Decode string: two stacks — one for counts, one for strings built so far."},
+
+{id:26,name:"Linked List",emoji:"🔗",rank:"⭐ Common",color:"#90E0EF",bg:"#90E0EF15",border:"#90E0EF40",tc:"O(n)",sc:"O(1)",
+identify:["Node.next pointer manipulation","Keywords: 'reverse', 'merge', 'cycle', 'middle'","In-place modification with O(1) extra space","Dummy head node tricks"],
+whenToUse:"Most linked list problems are pointer manipulation. Use a dummy head to simplify edge cases. Use fast/slow for cycle and middle. Reverse in-place with prev/cur/next triple.",
+types:["Reverse (iterative and recursive)","Merge Two/K Sorted Lists","Remove Nth from End","Cycle Detection (→ Fast & Slow)","Reorder / Rotate List","LRU Cache"],
+template:`// Reverse Linked List — iterative
+ListNode Reverse(ListNode head) {
+    ListNode prev = null, cur = head;
+    while (cur != null) {
+        var next = cur.next;
+        cur.next = prev;
+        prev = cur; cur = next;
+    }
+    return prev;
+}
+
+// Merge Two Sorted Lists
+ListNode Merge(ListNode l1, ListNode l2) {
+    var dummy = new ListNode(0); var cur = dummy;
+    while (l1 != null && l2 != null) {
+        if (l1.val <= l2.val) { cur.next = l1; l1 = l1.next; }
+        else                  { cur.next = l2; l2 = l2.next; }
+        cur = cur.next;
+    }
+    cur.next = l1 ?? l2;
+    return dummy.next;
+}
+
+// Remove Nth node from end (one pass)
+ListNode RemoveNthFromEnd(ListNode head, int n) {
+    var dummy = new ListNode(0, head); // dummy handles removing head
+    ListNode fast = dummy, slow = dummy;
+    for (int i = 0; i <= n; i++) fast = fast.next;
+    while (fast != null) { slow = slow.next; fast = fast.next; }
+    slow.next = slow.next.next;
+    return dummy.next;
+}`,
+pairs:["Fast & Slow Pointers","Two Pointers","Hash Map (LRU Cache)"],
+problems:["206. Reverse Linked List","21. Merge Two Sorted Lists","19. Remove Nth from End","138. Copy List with Random Pointer","148. Sort List","146. LRU Cache"],
+trick:"Dummy head eliminates null checks for head removal. For k-group reverse: find kth node, reverse group, recurse. For intersection: two pointers that switch heads reach intersection in same steps."}
+
 ];
 
 const QUESTIONS=[
@@ -658,6 +1172,18 @@ const CHEAT=[
 {p:"Prefix Sum",s:"range sum / subarray sum = k",t:"O(n)",b:"Range queries, subarray count"},
 {p:"Trie",s:"prefix search / word dictionary",t:"O(L)",b:"Autocomplete, word search"},
 {p:"Topological Sort",s:"dependency order / DAG / prerequisites",t:"O(V+E)",b:"Task scheduling, course order"},
+{p:"Trees",s:"tree height/path/LCA/BST",t:"O(n)",b:"Recursive DFS on left+right subtrees"},
+{p:"Intervals",s:"merge/insert intervals / scheduling",t:"O(n log n)",b:"Sort by start, sweep to merge"},
+{p:"Greedy",s:"local optimal → global optimal",t:"O(n log n)",b:"Activity selection, jump game"},
+{p:"Bit Manipulation",s:"XOR tricks / bitmask / power of 2",t:"O(n)",b:"Single number, subset DP"},
+{p:"Segment Tree / BIT",s:"range query + point update (mutable)",t:"O(log n)",b:"Mutable range sum/min/max"},
+{p:"Line Sweep",s:"events at x-coords / active intervals",t:"O(n log n)",b:"Skyline, rectangle area, calendar"},
+{p:"Graph Advanced",s:"weighted shortest path / MST / SCC",t:"O(E log V)",b:"Dijkstra, Kruskal, Bellman-Ford"},
+{p:"Two Heaps / Median",s:"dynamic median / balance halves",t:"O(n log n)",b:"Stream median, sliding window median"},
+{p:"Math & Number Theory",s:"primes / GCD / fast pow / mod",t:"O(√n)",b:"Sieve, binary exponentiation, nCr"},
+{p:"Hash Map / Counting",s:"O(1) lookup / frequency counting",t:"O(n)",b:"Two sum, group anagrams, top-K"},
+{p:"Stack / Queue Tricks",s:"LIFO bracket/expression/nested",t:"O(n)",b:"Valid parens, min stack, decode"},
+{p:"Linked List",s:"pointer manipulation / reverse / merge",t:"O(n)",b:"Reverse, merge sorted, LRU cache"},
 ];
 
 const SC={
@@ -3586,7 +4112,897 @@ public int[][] BuildMatrix(int k, int[][] rowConditions, int[][] colConditions) 
         matrix[rowPos[num]][colPos[num]] = num;
 
     return matrix;
+}`,alt:""}}
+
+,
+
+{id:"l70",name:"Maximum Depth of Binary Tree",lcNum:"104",diff:"easy",pattern:"Trees",alts:["BFS level order","Iterative DFS"],
+approach:"Recursive DFS. Base case: null → return 0. Return 1 + max(left depth, right depth). Single pass O(n) time, O(h) space where h = tree height (O(log n) balanced, O(n) worst).",
+followups:["Minimum Depth of Binary Tree (LC 111)","Diameter of Binary Tree (LC 543)","Count Good Nodes in Binary Tree (LC 1448)","Maximum Width of Binary Tree (LC 662)"],
+similar:["Balanced Binary Tree (LC 110)","Diameter of Binary Tree","Same Tree"],
+notes:"BFS alternative: count levels in queue. Iterative DFS: use explicit stack storing (node, depth) pairs. O(h) stack space — prefer iterative for very deep trees.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE is already optimal for trees — must visit every node
+// DFS recursive — O(n) time, O(h) space
+public int MaxDepth(TreeNode root) {
+    if (root == null) return 0;
+    return 1 + Math.Max(MaxDepth(root.left), MaxDepth(root.right));
+}`,why:`There's no way to find the max depth without visiting every node at least once (a deeper path could always be hiding). DFS is already optimal at O(n). The only variant is iterative vs recursive — same complexity.`,optimal:`// OPTIMAL — Recursive DFS — O(n) time, O(h) space
+public int MaxDepth(TreeNode root) {
+    if (root == null) return 0;
+    int left  = MaxDepth(root.left);
+    int right = MaxDepth(root.right);
+    return 1 + Math.Max(left, right);
+}`,alt:`// ALTERNATE — BFS level order — O(n) time, O(w) space (w = max width)
+public int MaxDepthBFS(TreeNode root) {
+    if (root == null) return 0;
+    var queue = new Queue<TreeNode>();
+    queue.Enqueue(root);
+    int depth = 0;
+    while (queue.Count > 0) {
+        int size = queue.Count;
+        depth++;
+        for (int i = 0; i < size; i++) {
+            var node = queue.Dequeue();
+            if (node.left  != null) queue.Enqueue(node.left);
+            if (node.right != null) queue.Enqueue(node.right);
+        }
+    }
+    return depth;
+}`}},
+
+{id:"l71",name:"Diameter of Binary Tree",lcNum:"543",diff:"easy",pattern:"Trees",alts:["DFS with global variable"],
+approach:"DFS returning height from each node. At each node, the diameter passing through it = leftHeight + rightHeight. Update a global max. Return 1 + max(left, right) height upward. O(n) time O(h) space.",
+followups:["Binary Tree Maximum Path Sum (LC 124)","Longest Univalue Path (LC 687)","Maximum Difference Between Node and Ancestor (LC 1026)"],
+similar:["Maximum Depth of Binary Tree","Binary Tree Maximum Path Sum","Balanced Binary Tree"],
+notes:"Classic 'answer at internal node' pattern: the optimal path may not pass through root. Use a ref/array to carry the global max since C# can't capture and modify a local in a lambda easily.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n²): compute height of each node separately
+public int DiameterBrute(TreeNode root) {
+    if (root == null) return 0;
+    int leftH  = Height(root.left);
+    int rightH = Height(root.right);
+    int throughRoot = leftH + rightH;
+    int leftDiam  = DiameterBrute(root.left);
+    int rightDiam = DiameterBrute(root.right);
+    return Math.Max(throughRoot, Math.Max(leftDiam, rightDiam));
+}
+int Height(TreeNode n) => n == null ? 0 : 1 + Math.Max(Height(n.left), Height(n.right));`,why:`Brute force recomputes height of subtrees repeatedly — O(n²). We can compute height and update the diameter in a single DFS pass by returning height upward while updating a global max at each node.`,optimal:`// OPTIMAL — Single DFS pass — O(n) time, O(h) space
+int _max = 0;
+public int DiameterOfBinaryTree(TreeNode root) {
+    _max = 0;
+    Dfs(root);
+    return _max;
+}
+int Dfs(TreeNode node) {
+    if (node == null) return 0;
+    int left  = Dfs(node.left);
+    int right = Dfs(node.right);
+    _max = Math.Max(_max, left + right); // diameter through this node
+    return 1 + Math.Max(left, right);    // height returned to parent
 }`,alt:""}},
+
+{id:"l72",name:"Binary Tree Maximum Path Sum",lcNum:"124",diff:"hard",pattern:"Trees",alts:["DFS with global max"],
+approach:"DFS returning the max gain from each node (max single-branch path including node). At each node: gain = node.val + max(0, leftGain) + max(0, rightGain) — this is the candidate answer through this node. Update global max. Return node.val + max(0, max(leftGain, rightGain)) upward. O(n) O(h).",
+followups:["Diameter of Binary Tree (LC 543)","Longest Univalue Path (LC 687)","Path Sum III (LC 437)","Maximum Sum BST in Binary Tree (LC 1373)"],
+similar:["Diameter of Binary Tree","Path Sum","Maximum Depth"],
+notes:"Negative values are valid — clamping contributions to 0 means 'don't include this subtree'. Can't return the full through-node path upward since a path can only fork at one node.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n²): collect all root-to-leaf paths and try all pairs
+// Complex to implement correctly — just know why it's bad`,why:`A brute force collecting all paths is O(n²) and complex. Key insight: a path in a tree either (a) passes through a node as the 'peak' — using both left and right branches — or (b) continues upward. Handle (a) as the candidate answer, return (b) to parent.`,optimal:`// OPTIMAL — DFS with global max — O(n) time, O(h) space
+int _ans = int.MinValue;
+public int MaxPathSum(TreeNode root) {
+    _ans = int.MinValue;
+    MaxGain(root);
+    return _ans;
+}
+int MaxGain(TreeNode node) {
+    if (node == null) return 0;
+    int leftGain  = Math.Max(MaxGain(node.left),  0); // clamp negatives to 0
+    int rightGain = Math.Max(MaxGain(node.right), 0);
+    _ans = Math.Max(_ans, node.val + leftGain + rightGain); // candidate
+    return node.val + Math.Max(leftGain, rightGain);        // return best branch
+}`,alt:""}},
+
+{id:"l73",name:"Lowest Common Ancestor of a Binary Tree",lcNum:"236",diff:"medium",pattern:"Trees",alts:["Parent pointer map + ancestor set"],
+approach:"DFS: if node is null/p/q return node. Recurse left and right. If both sides return non-null → current node is LCA. If only one side returns non-null → that side contains both p and q, propagate up. O(n) O(h).",
+followups:["LCA of BST (LC 235) — use BST property","LCA of Deepest Leaves (LC 1123)","Kth Ancestor of a Tree Node (LC 1483)","Distance Between Two Nodes"],
+similar:["Path Sum","Binary Tree Maximum Path Sum","Validate BST"],
+notes:"For BST (LC 235): if both p,q < node → go left; if both > node → go right; else current is LCA. That's O(h) instead of O(n). For general tree use this O(n) approach.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — store path from root to each node, find last common node
+// O(n) time but O(n) extra space for storing paths`,why:`Storing full paths uses O(n) extra space. The recursive approach is elegant: if we find p or q at a node, we 'report' it upward. When both sides report, the current node is the meeting point — the LCA.`,optimal:`// OPTIMAL — Recursive DFS — O(n) time, O(h) space
+public TreeNode LowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
+    if (root == null || root == p || root == q) return root;
+
+    TreeNode left  = LowestCommonAncestor(root.left,  p, q);
+    TreeNode right = LowestCommonAncestor(root.right, p, q);
+
+    // Both sides found something → current node is LCA
+    if (left != null && right != null) return root;
+    // Only one side found → propagate that result up
+    return left ?? right;
+}`,alt:""}},
+
+{id:"l74",name:"Validate Binary Search Tree",lcNum:"98",diff:"medium",pattern:"Trees",alts:["Inorder traversal (must be strictly increasing)"],
+approach:"DFS passing valid range [min, max] down. Each node must satisfy min < node.val < max. Left subtree: max becomes node.val. Right subtree: min becomes node.val. O(n) O(h). Alternative: inorder traversal must be strictly increasing.",
+followups:["Recover Binary Search Tree (LC 99)","Convert Sorted Array to BST (LC 108)","Kth Smallest in BST (LC 230)","BST Iterator (LC 173)"],
+similar:["Binary Tree Level Order","Lowest Common Ancestor BST","Count Nodes in BST range"],
+notes:"Common mistake: only checking immediate parent-child relationship. Must pass bounds all the way down. Use long.MinValue/MaxValue to handle int boundary nodes.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — collect inorder, check strictly increasing — O(n) time O(n) space
+public bool IsValidBSTBrute(TreeNode root) {
+    var vals = new List<int>();
+    InOrder(root, vals);
+    for (int i = 1; i < vals.Count; i++)
+        if (vals[i] <= vals[i-1]) return false;
+    return true;
+}
+void InOrder(TreeNode n, List<int> list) {
+    if (n == null) return;
+    InOrder(n.left, list); list.Add(n.val); InOrder(n.right, list);
+}`,why:`Storing inorder uses O(n) space. We can validate during the DFS itself by passing allowed bounds — O(1) extra space (ignoring recursion stack).`,optimal:`// OPTIMAL — DFS with bounds — O(n) time, O(h) space
+public bool IsValidBST(TreeNode root) => Validate(root, long.MinValue, long.MaxValue);
+bool Validate(TreeNode node, long min, long max) {
+    if (node == null) return true;
+    if (node.val <= min || node.val >= max) return false;
+    return Validate(node.left,  min,       node.val)
+        && Validate(node.right, node.val,  max);
+}`,alt:""}},
+
+{id:"l75",name:"Merge Intervals",lcNum:"56",diff:"medium",pattern:"Intervals",alts:["Sort + sweep","Line sweep with events"],
+approach:"Sort intervals by start time. Iterate: if current interval overlaps with last merged (cur.start <= last.end), merge by extending last.end = max(last.end, cur.end). Otherwise append new interval. O(n log n) sort + O(n) sweep.",
+followups:["Insert Interval (LC 57)","Non-overlapping Intervals (LC 435)","Meeting Rooms (LC 252)","Meeting Rooms II (LC 253)","Employee Free Time (LC 759)"],
+similar:["Insert Interval","Non-overlapping Intervals","Interval List Intersections"],
+notes:"Sort by start ensures we only need to look at the last merged interval. Overlap condition: cur.start <= last.end (not strictly less — touching intervals [1,2],[2,3] should merge). Return result.ToArray().",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n²): repeatedly scan for any overlapping pair and merge
+public int[][] MergeIntervalsBrute(int[][] intervals) {
+    var list = intervals.ToList();
+    bool merged = true;
+    while (merged) {
+        merged = false;
+        for (int i = 0; i < list.Count && !merged; i++)
+            for (int j = i+1; j < list.Count && !merged; j++)
+                if (list[i][0] <= list[j][1] && list[j][0] <= list[i][1]) {
+                    list[i] = new[]{Math.Min(list[i][0],list[j][0]),Math.Max(list[i][1],list[j][1])};
+                    list.RemoveAt(j); merged = true;
+                }
+    }
+    return list.ToArray();
+}`,why:`Repeatedly scanning for overlapping pairs is O(n²) per merge, O(n³) total. Sorting by start time means we only ever need to compare against the LAST merged interval — overlaps are contiguous after sorting.`,optimal:`// OPTIMAL — Sort by start + sweep — O(n log n) time, O(n) space
+public int[][] Merge(int[][] intervals) {
+    Array.Sort(intervals, (a, b) => a[0] - b[0]);
+    var result = new List<int[]> { intervals[0] };
+
+    for (int i = 1; i < intervals.Length; i++) {
+        int[] last = result[^1];
+        int[] cur  = intervals[i];
+        if (cur[0] <= last[1])
+            last[1] = Math.Max(last[1], cur[1]); // extend
+        else
+            result.Add(cur); // no overlap — new interval
+    }
+    return result.ToArray();
+}`,alt:`// ALTERNATE — Insert Interval style: return merged list directly
+// Same complexity, useful when you need to insert a new interval too`}},
+
+{id:"l76",name:"Non-overlapping Intervals",lcNum:"435",diff:"medium",pattern:"Intervals",alts:["Greedy sort by end","DP O(n²)"],
+approach:"Greedy: sort by end time. Keep a 'prevEnd' tracking the end of the last kept interval. For each interval: if it starts >= prevEnd, keep it (update prevEnd). Otherwise remove it (increment count). Maximizes kept = minimizes removed. O(n log n).",
+followups:["Merge Intervals (LC 56)","Minimum Number of Arrows to Burst Balloons (LC 452)","Video Stitching (LC 1024)","Jump Game II (LC 45)"],
+similar:["Merge Intervals","Meeting Rooms","Minimum Number of Arrows"],
+notes:"Sorting by END (not start) is the key insight — activity selection problem. Greedy proof: always keeping the interval that ends earliest leaves maximum room for future intervals.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — DP: dp[i] = max non-overlapping intervals ending at i — O(n²)
+public int EraseOverlapBrute(int[][] intervals) {
+    Array.Sort(intervals, (a,b) => a[0] - b[0]);
+    int n = intervals.Length;
+    int[] dp = new int[n]; Array.Fill(dp, 1);
+    for (int i = 1; i < n; i++)
+        for (int j = 0; j < i; j++)
+            if (intervals[j][1] <= intervals[i][0])
+                dp[i] = Math.Max(dp[i], dp[j] + 1);
+    return n - dp.Max();
+}`,why:`DP is O(n²). Greedy is provably optimal here (activity selection): always keep the interval ending earliest — it "wastes" the least future space. Sort by end, greedily keep non-overlapping.`,optimal:`// OPTIMAL — Greedy sort by end — O(n log n) time, O(1) space
+public int EraseOverlapIntervals(int[][] intervals) {
+    Array.Sort(intervals, (a, b) => a[1] - b[1]); // sort by END
+    int removed = 0, prevEnd = int.MinValue;
+
+    foreach (var iv in intervals) {
+        if (iv[0] >= prevEnd)
+            prevEnd = iv[1]; // keep: starts after prev ends
+        else
+            removed++;       // overlap: remove this one
+    }
+    return removed;
+}`,alt:""}},
+
+{id:"l77",name:"Meeting Rooms II",lcNum:"253",diff:"medium",pattern:"Intervals",alts:["Min-heap of end times","Line sweep events"],
+approach:"Two sorted arrays (starts, ends). Use two-pointer sweep: if next start < earliest end, need new room (rooms++). Otherwise a room freed (end pointer advances). Track max rooms. O(n log n). Min-heap alternative: heap of end times, pop if compatible. O(n log n).",
+followups:["Meeting Rooms I (LC 252) — just check any overlap","Employee Free Time (LC 759)","Car Pooling (LC 1094)","My Calendar III (LC 732)"],
+similar:["Merge Intervals","Non-overlapping Intervals","Task Scheduler"],
+notes:"Two-pointer approach avoids heap entirely. Sort starts and ends separately (don't need them paired). At each step: if a meeting starts before the earliest-ending meeting ends → new room needed.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n²): for each interval count how many others overlap with it
+public int MinMeetingRoomsBrute(int[][] intervals) {
+    int maxRooms = 0;
+    foreach (var iv in intervals) {
+        int rooms = 1;
+        foreach (var other in intervals)
+            if (other != iv && other[0] < iv[1] && iv[0] < other[1]) rooms++;
+        maxRooms = Math.Max(maxRooms, rooms);
+    }
+    return maxRooms;
+}`,why:`Checking all pairs is O(n²). With sorted events, we can process starts and ends in order and just count the running 'active' meetings — O(n log n) sort then O(n) sweep.`,optimal:`// OPTIMAL — Two sorted arrays — O(n log n) time, O(n) space
+public int MinMeetingRooms(int[][] intervals) {
+    int n = intervals.Length;
+    int[] starts = intervals.Select(i => i[0]).OrderBy(x=>x).ToArray();
+    int[] ends   = intervals.Select(i => i[1]).OrderBy(x=>x).ToArray();
+
+    int rooms = 0, maxRooms = 0, e = 0;
+    for (int s = 0; s < n; s++) {
+        if (starts[s] < ends[e]) rooms++; // new meeting before any ends
+        else                     e++;     // reuse freed room
+        maxRooms = Math.Max(maxRooms, rooms);
+    }
+    return maxRooms;
+}`,alt:`// ALTERNATE — Min-heap of end times — O(n log n) time, O(n) space
+public int MinMeetingRoomsHeap(int[][] intervals) {
+    Array.Sort(intervals, (a,b) => a[0] - b[0]);
+    var heap = new PriorityQueue<int,int>(); // end times
+    foreach (var iv in intervals) {
+        if (heap.Count > 0 && heap.Peek() <= iv[0]) heap.Dequeue();
+        heap.Enqueue(iv[1], iv[1]);
+    }
+    return heap.Count;
+}`}},
+
+{id:"l78",name:"Jump Game",lcNum:"55",diff:"medium",pattern:"Greedy",alts:["DP O(n²)","BFS O(n)"],
+approach:"Greedy: track 'reach' = farthest index reachable so far. For each index i, if i > reach → gap, return false. Otherwise update reach = max(reach, i + nums[i]). If we get through all indices, return true. O(n) O(1).",
+followups:["Jump Game II (LC 45) — minimum jumps","Jump Game III (LC 1306) — can reach index with value 0","Jump Game IV (LC 1345) — BFS with same-value jumps","Jump Game VI (LC 1696) — max score"],
+similar:["Jump Game II","Gas Station","Minimum Number of Arrows"],
+notes:"DP approach: dp[i] = can reach index i. O(n²). Greedy is much simpler: we don't need to know HOW to reach each point, just WHETHER we can. Track max reach greedily.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE / DP — O(n²) time, O(n) space
+public bool CanJumpDP(int[] nums) {
+    bool[] dp = new bool[nums.Length]; dp[0] = true;
+    for (int i = 1; i < nums.Length; i++)
+        for (int j = 0; j < i; j++)
+            if (dp[j] && j + nums[j] >= i) { dp[i] = true; break; }
+    return dp[nums.Length - 1];
+}`,why:`DP checks all previous positions for each index — O(n²). Greedy insight: we only need to track the FARTHEST reachable index. If current index is within reach, extend reach. No need to remember individual reachability.`,optimal:`// OPTIMAL — Greedy max reach — O(n) time, O(1) space
+public bool CanJump(int[] nums) {
+    int reach = 0;
+    for (int i = 0; i < nums.Length; i++) {
+        if (i > reach) return false;        // gap — can't proceed
+        reach = Math.Max(reach, i + nums[i]);
+    }
+    return true;
+}`,alt:`// ALTERNATE — Work backwards: mark index 'good' if it can reach a good index
+// O(n) time but O(n) space
+public bool CanJumpBackward(int[] nums) {
+    int lastGood = nums.Length - 1;
+    for (int i = nums.Length - 2; i >= 0; i--)
+        if (i + nums[i] >= lastGood) lastGood = i;
+    return lastGood == 0;
+}`}},
+
+{id:"l79",name:"Jump Game II",lcNum:"45",diff:"medium",pattern:"Greedy",alts:["BFS (levels = jumps)","DP O(n²)"],
+approach:"Greedy BFS-style: track current jump range [curStart..curEnd] and farthest reachable in this jump. When we exhaust current range, we must take another jump — increment count and set range to [curEnd+1..farthest]. O(n) O(1).",
+followups:["Jump Game (LC 55)","Jump Game III (LC 1306)","Video Stitching (LC 1024)","Minimum Number of Taps (LC 1326)"],
+similar:["Jump Game","Minimum Number of Arrows","Gas Station"],
+notes:"Never actually jump to farthest immediately. Just track what's reachable if we take one more jump from any position in the current range. When range exhausted → forced to jump → count++.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE / DP — O(n²) time, O(n) space
+public int JumpDP(int[] nums) {
+    int n = nums.Length;
+    int[] dp = new int[n]; Array.Fill(dp, int.MaxValue); dp[0] = 0;
+    for (int i = 1; i < n; i++)
+        for (int j = 0; j < i; j++)
+            if (dp[j] != int.MaxValue && j + nums[j] >= i)
+                dp[i] = Math.Min(dp[i], dp[j] + 1);
+    return dp[n-1];
+}`,why:`DP is O(n²). Greedy works because we never benefit from making a shorter jump when a longer one is available — we want to maximize each jump's reach. Process positions level by level (BFS-style) without an actual queue.`,optimal:`// OPTIMAL — Greedy implicit BFS — O(n) time, O(1) space
+public int Jump(int[] nums) {
+    int jumps = 0, curEnd = 0, farthest = 0;
+    for (int i = 0; i < nums.Length - 1; i++) {
+        farthest = Math.Max(farthest, i + nums[i]);
+        if (i == curEnd) {   // reached end of current jump range
+            jumps++;
+            curEnd = farthest; // extend to farthest reachable
+        }
+    }
+    return jumps;
+}`,alt:""}},
+
+{id:"l80",name:"Gas Station",lcNum:"134",diff:"medium",pattern:"Greedy",alts:["Two-pass: find start + verify"],
+approach:"If total gas >= total cost, a solution always exists and is unique. Find the starting station: run a simulation tracking running tank. Whenever tank < 0, the start must be after current index (reset tank=0, start=i+1). O(n) O(1).",
+followups:["Jump Game (LC 55)","Minimum Cost to Connect Sticks (LC 1167)","Task Scheduler (LC 621)","Partition Labels (LC 763)"],
+similar:["Jump Game","Candy","Queue Reconstruction by Height"],
+notes:"Key insight: if total sum >= 0, solution exists. The start is always right after the worst cumulative deficit point. Single pass handles both existence check and start finding.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n²): try every starting station
+public int CanCompleteCircuitBrute(int[] gas, int[] cost) {
+    int n = gas.Length;
+    for (int start = 0; start < n; start++) {
+        int tank = 0; bool ok = true;
+        for (int i = 0; i < n; i++) {
+            tank += gas[(start+i)%n] - cost[(start+i)%n];
+            if (tank < 0) { ok = false; break; }
+        }
+        if (ok) return start;
+    }
+    return -1;
+}`,why:`Trying every start is O(n²). Key insight: if we run out of gas at station k when starting from s, then no station between s and k can be the start either (they all have a smaller prefix sum). Restart from k+1.`,optimal:`// OPTIMAL — Single pass greedy — O(n) time, O(1) space
+public int CanCompleteCircuit(int[] gas, int[] cost) {
+    int total = 0, tank = 0, start = 0;
+    for (int i = 0; i < gas.Length; i++) {
+        int diff = gas[i] - cost[i];
+        total += diff;
+        tank  += diff;
+        if (tank < 0) {       // can't reach i+1 from 'start'
+            start = i + 1;    // must start after i
+            tank  = 0;
+        }
+    }
+    return total >= 0 ? start : -1;
+}`,alt:""}},
+
+{id:"l81",name:"Single Number",lcNum:"136",diff:"easy",pattern:"Bit Manipulation",alts:["Hash Map O(n) space","Sort + scan"],
+approach:"XOR all numbers. XOR is commutative and associative. a^a=0, a^0=a. So all paired numbers cancel, leaving the single number. O(n) time O(1) space.",
+followups:["Single Number II (LC 137) — appears once among thrice-occurring","Single Number III (LC 260) — two single numbers","Missing Number (LC 268)","Find the Duplicate Number (LC 287)"],
+similar:["Missing Number","Find the Duplicate Number","Single Number II"],
+notes:"XOR trick only works when every other number appears exactly twice. For 3x repeats (LC 137): use bit counting mod 3. For two singles (LC 260): XOR all, then use a set bit to separate the two groups.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n) time, O(n) space using hash map
+public int SingleNumberBrute(int[] nums) {
+    var freq = new Dictionary<int,int>();
+    foreach (int n in nums) freq[n] = freq.GetValueOrDefault(n) + 1;
+    return freq.First(kv => kv.Value == 1).Key;
+}`,why:`Hash map uses O(n) space. XOR exploits the mathematical property a^a=0: pair each number with its duplicate and they annihilate. No extra space needed.`,optimal:`// OPTIMAL — XOR — O(n) time, O(1) space
+public int SingleNumber(int[] nums) {
+    return nums.Aggregate(0, (acc, n) => acc ^ n);
+    // Or equivalently:
+    // int result = 0;
+    // foreach (int n in nums) result ^= n;
+    // return result;
+}`,alt:`// ALTERNATE — Math: 2 * sum(set) - sum(array) = single number
+public int SingleNumberMath(int[] nums) =>
+    2 * nums.Distinct().Sum() - nums.Sum();`}},
+
+{id:"l82",name:"Number of 1 Bits",lcNum:"191",diff:"easy",pattern:"Bit Manipulation",alts:["Built-in popcount","Loop check each bit"],
+approach:"Brian Kernighan's algorithm: n & (n-1) clears the lowest set bit. Count how many times we can do this until n == 0. O(number of set bits) which is O(log n) worst case.",
+followups:["Counting Bits (LC 338) — for all i in [0..n]","Reverse Bits (LC 190)","Power of Two (LC 231)","Sum of Two Integers (LC 371)"],
+similar:["Counting Bits","Reverse Bits","Bitwise AND of Numbers Range"],
+notes:"n & (n-1) trick: removes the lowest set bit. Used everywhere — check power of 2: n>0 && (n&(n-1))==0. C# has BitOperations.PopCount(n) for built-in popcount.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — check each of 32 bits
+public int HammingWeightBrute(uint n) {
+    int count = 0;
+    while (n != 0) { count += (int)(n & 1); n >>= 1; }
+    return count;
+}`,why:`Checking each bit is O(32) = O(1) technically but iterates through all bits including zeros. Brian Kernighan skips directly from set bit to set bit.`,optimal:`// OPTIMAL — Brian Kernighan — O(k) where k = number of set bits
+public int HammingWeight(uint n) {
+    int count = 0;
+    while (n != 0) {
+        n &= n - 1; // clear lowest set bit
+        count++;
+    }
+    return count;
+}`,alt:`// ALTERNATE — Built-in
+public int HammingWeightBuiltin(uint n) =>
+    System.Numerics.BitOperations.PopCount(n);`}},
+
+{id:"l83",name:"Counting Bits",lcNum:"338",diff:"easy",pattern:"Bit Manipulation",alts:["DP with LSB","Brian Kernighan per number"],
+approach:"DP: dp[i] = dp[i >> 1] + (i & 1). Right shift removes the LSB; the count of set bits for i/2 plus whether i is odd gives dp[i]. Build for all i in [0..n] in O(n).",
+followups:["Number of 1 Bits (LC 191)","Sum of Two Integers (LC 371)","Reverse Bits (LC 190)","Find the Difference (LC 389)"],
+similar:["Number of 1 Bits","Single Number","Missing Number"],
+notes:"Three DP relations all work: dp[i]=dp[i>>1]+(i&1), or dp[i]=dp[i&(i-1)]+1 (clear last set bit), or dp[i]=dp[i/2]+(i%2). The first is simplest to remember.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n log n): count bits for each number independently
+public int[] CountBitsBrute(int n) {
+    int[] res = new int[n+1];
+    for (int i = 0; i <= n; i++) {
+        int x = i, c = 0;
+        while (x > 0) { x &= x-1; c++; }
+        res[i] = c;
+    }
+    return res;
+}`,why:`Counting bits independently per number is O(n log n). DP reuses previously computed results: the bit count of i equals the bit count of i/2 plus the last bit of i. O(n) overall.`,optimal:`// OPTIMAL — DP — O(n) time, O(n) space
+public int[] CountBits(int n) {
+    int[] dp = new int[n + 1];
+    for (int i = 1; i <= n; i++)
+        dp[i] = dp[i >> 1] + (i & 1); // i>>1 = i/2; i&1 = last bit
+    return dp;
+}`,alt:""}},
+
+{id:"l84",name:"Range Sum Query - Mutable",lcNum:"307",diff:"medium",pattern:"Segment Tree / BIT",alts:["Segment Tree","Sqrt decomposition"],
+approach:"Binary Indexed Tree (Fenwick Tree). Build in O(n), point update in O(log n), prefix sum query in O(log n). Update: i += i&(-i). Query: i -= i&(-i). Range [l,r] = query(r) - query(l-1).",
+followups:["Range Sum Query 2D Mutable (LC 308)","Count of Smaller Numbers After Self (LC 315)","Reverse Pairs (LC 493)","Count of Range Sum (LC 327)"],
+similar:["Range Sum Query Immutable (prefix sum)","Count Inversions","Skyline Problem"],
+notes:"BIT is 1-indexed. i&(-i) isolates the lowest set bit — this determines which range each index is responsible for. BIT update propagates UP (+=), query traverses DOWN (-=). Always check: is the problem static? If so, use simple prefix sum.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n) update or O(n) query with prefix array rebuild
+public class NumArrayBrute {
+    int[] nums;
+    public NumArrayBrute(int[] nums) { this.nums = nums.ToArray(); }
+    public void Update(int i, int val) { nums[i] = val; }
+    public int SumRange(int l, int r) {
+        int s = 0;
+        for (int i = l; i <= r; i++) s += nums[i];
+        return s;
+    }
+}`,why:`O(n) per query is too slow for many updates+queries. BIT gives O(log n) for both by organizing the array into overlapping ranges where each index 'owns' a range determined by its lowest set bit.`,optimal:`// OPTIMAL — Binary Indexed Tree — O(log n) update and query
+public class NumArray {
+    int[] tree, nums; int n;
+    public NumArray(int[] nums) {
+        this.nums = new int[nums.Length];
+        n = nums.Length; tree = new int[n + 1];
+        for (int i = 0; i < n; i++) Update(i, nums[i]);
+    }
+    public void Update(int i, int val) {
+        int diff = val - nums[i]; nums[i] = val;
+        for (int j = i+1; j <= n; j += j & (-j)) tree[j] += diff;
+    }
+    public int SumRange(int l, int r) => Query(r+1) - Query(l);
+    int Query(int i) { int s=0; for(;i>0;i-=i&(-i)) s+=tree[i]; return s; }
+}`,alt:""}},
+
+{id:"l85",name:"Count of Smaller Numbers After Self",lcNum:"315",diff:"hard",pattern:"Segment Tree / BIT",alts:["Merge sort","BIT with coordinate compression"],
+approach:"Process right to left. For each number, query BIT for count of elements already inserted that are smaller (prefix sum up to num-1). Then insert num into BIT. Coordinate compress values to [1..n] range first. O(n log n).",
+followups:["Reverse Pairs (LC 493)","Count of Range Sum (LC 327)","Global and Local Inversions (LC 775)","Count Inversions (merge sort classic)"],
+similar:["Range Sum Query Mutable","Reverse Pairs","Sort Array by Power Value"],
+notes:"Coordinate compress: map values to rank [1..n]. Process right-to-left so 'already inserted' means 'to the right'. BIT query gives count of smaller elements already seen (to the right).",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n²): for each element count smaller to its right
+public IList<int> CountSmallerBrute(int[] nums) {
+    int n = nums.Length;
+    int[] res = new int[n];
+    for (int i = 0; i < n; i++)
+        for (int j = i+1; j < n; j++)
+            if (nums[j] < nums[i]) res[i]++;
+    return res;
+}`,why:`O(n²) nested loop. BIT with coordinate compression processes elements right-to-left: inserting into BIT, then querying prefix sum gives count of smaller elements already inserted (which are all to the right).`,optimal:`// OPTIMAL — BIT + coordinate compression — O(n log n)
+public IList<int> CountSmaller(int[] nums) {
+    int n = nums.Length;
+    int[] sorted = nums.Distinct().OrderBy(x=>x).ToArray();
+    int Rank(int v) => Array.BinarySearch(sorted, v) + 1; // 1-indexed
+
+    int[] tree = new int[sorted.Length + 2];
+    void Update(int i) { for (; i < tree.Length; i += i&(-i)) tree[i]++; }
+    int Query(int i) { int s=0; for (;i>0;i-=i&(-i)) s+=tree[i]; return s; }
+
+    var res = new int[n];
+    for (int i = n-1; i >= 0; i--) {
+        int r = Rank(nums[i]);
+        res[i] = Query(r - 1); // count of elements < nums[i]
+        Update(r);
+    }
+    return res;
+}`,alt:""}},
+
+{id:"l86",name:"The Skyline Problem",lcNum:"218",diff:"hard",pattern:"Line Sweep",alts:["Priority queue sweep","Segment tree"],
+approach:"Convert buildings to events: (x, -height) for start, (x, height) for end. Sort events by x; at same x, starts (negative) before ends, taller before shorter. Sweep with a SortedDictionary of active heights. When max height changes, record a keypoint. O(n log n).",
+followups:["Rectangle Area II (LC 850)","Employee Free Time (LC 759)","My Calendar III (LC 732)","Maximum Width Ramp (LC 962)"],
+similar:["Meeting Rooms II","Merge Intervals","Rectangle Area"],
+notes:"Encode start heights as negative so they sort before ends at same x. Use SortedDictionary<height, count> as a multiset for active buildings (need to handle duplicate heights). When max height changes → new keypoint.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n * maxX): scan every x-coordinate
+// Too slow for large coordinates — need coordinate compression`,why:`Scanning every x-coordinate between buildings is O(maxX) which can be 2^31. Line sweep only processes the 2n boundary points — O(n log n).`,optimal:`// OPTIMAL — Line Sweep with SortedDictionary — O(n log n)
+public IList<IList<int>> GetSkyline(int[][] buildings) {
+    var events = new List<(int x, int h)>();
+    foreach (var b in buildings) {
+        events.Add((b[0], -b[2])); // start: negative height
+        events.Add((b[1],  b[2])); // end:   positive
+    }
+    events.Sort((a,b) => a.x!=b.x ? a.x-b.x : a.h-b.h);
+
+    var active = new SortedDictionary<int,int>(Comparer<int>.Create((a,b)=>b-a)); // max-first
+    active[0] = 1;
+    var res = new List<IList<int>>();
+    int prevMax = 0;
+
+    foreach (var (x, h) in events) {
+        if (h < 0) active[-h] = active.GetValueOrDefault(-h) + 1;
+        else { if (--active[h] == 0) active.Remove(h); }
+        int curMax = active.Keys.First();
+        if (curMax != prevMax) { res.Add(new[]{x, curMax}); prevMax = curMax; }
+    }
+    return res;
+}`,alt:""}},
+
+{id:"l87",name:"Network Delay Time",lcNum:"743",diff:"medium",pattern:"Graph Advanced",alts:["Bellman-Ford O(VE)","Floyd-Warshall O(V³)"],
+approach:"Dijkstra from source node k. Build adjacency list. Use min-heap (priority queue) with (distance, node). Relax edges greedily. Skip stale entries (d > dist[node]). Answer = max of all dist values; if any unreachable → -1. O((V+E) log V).",
+followups:["Cheapest Flights Within K Stops (LC 787)","Find the City With the Smallest Number of Neighbors (LC 1334)","Path With Minimum Effort (LC 1631)","Swim in Rising Water (LC 778)"],
+similar:["Cheapest Flights K Stops","Path With Maximum Probability","Minimum Cost to Reach City"],
+notes:"Dijkstra requires non-negative weights. Skip stale PQ entries with if(d > dist[node]) continue. For 'at most K stops' — use modified Dijkstra with state (node, stops) or Bellman-Ford K iterations.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — BFS/DFS trying all paths — exponential for graphs with cycles`,why:`Trying all paths is exponential. Dijkstra exploits non-negative weights: the first time a node is dequeued from the min-heap, its distance is guaranteed optimal — no need to revisit.`,optimal:`// OPTIMAL — Dijkstra — O((V+E) log V) time, O(V+E) space
+public int NetworkDelayTime(int[][] times, int n, int k) {
+    var graph = new List<(int to, int w)>[n+1];
+    for (int i = 1; i <= n; i++) graph[i] = new();
+    foreach (var t in times) graph[t[0]].Add((t[1], t[2]));
+
+    int[] dist = Enumerable.Repeat(int.MaxValue, n+1).ToArray();
+    dist[k] = 0;
+    var pq = new PriorityQueue<(int d, int u), int>();
+    pq.Enqueue((0, k), 0);
+
+    while (pq.Count > 0) {
+        var (d, u) = pq.Dequeue();
+        if (d > dist[u]) continue; // stale entry
+        foreach (var (v, w) in graph[u])
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.Enqueue((dist[v], v), dist[v]);
+            }
+    }
+    int ans = dist.Skip(1).Max();
+    return ans == int.MaxValue ? -1 : ans;
+}`,alt:""}},
+
+{id:"l88",name:"Cheapest Flights Within K Stops",lcNum:"787",diff:"medium",pattern:"Graph Advanced",alts:["Bellman-Ford K iterations","Modified Dijkstra with stops state"],
+approach:"Bellman-Ford with exactly K+1 iterations (K stops = K+1 edges). Each iteration relaxes all edges once. Use a copy of previous dist to avoid using edges added in the same iteration. O(K*E) time O(V) space.",
+followups:["Network Delay Time (LC 743)","Path With Minimum Effort (LC 1631)","Find Cheapest Price (variant)","Minimum Cost to Reach City With Budget"],
+similar:["Network Delay Time","Path With Maximum Probability","Minimum Cost Flow"],
+notes:"Must use a COPY of dist from previous iteration — otherwise you might use two edges from the same iteration. This is the key difference from standard Bellman-Ford.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — DFS/BFS exploring all paths within K stops — exponential`,why:`Exploring all paths is exponential. Bellman-Ford with K iterations is O(K*E): each iteration finds the shortest path using at most one more edge. Use a snapshot of previous iteration to avoid chaining edges within one pass.`,optimal:`// OPTIMAL — Bellman-Ford K+1 iterations — O(K*E) time, O(V) space
+public int FindCheapestPrice(int n, int[][] flights, int src, int dst, int k) {
+    int[] dist = Enumerable.Repeat(int.MaxValue/2, n).ToArray();
+    dist[src] = 0;
+
+    for (int i = 0; i <= k; i++) {        // k stops = k+1 edges
+        int[] tmp = dist.ToArray();        // snapshot — prevent chaining
+        foreach (var f in flights)
+            if (dist[f[0]] != int.MaxValue/2)
+                tmp[f[1]] = Math.Min(tmp[f[1]], dist[f[0]] + f[2]);
+        dist = tmp;
+    }
+    return dist[dst] == int.MaxValue/2 ? -1 : dist[dst];
+}`,alt:""}},
+
+{id:"l89",name:"Minimum Cost to Connect All Points",lcNum:"1584",diff:"medium",pattern:"Graph Advanced",alts:["Prim's MST O(V²)","Kruskal + Union-Find O(E log E)"],
+approach:"Prim's algorithm: start from any node, greedily add the cheapest edge connecting the MST to a new node. Use dist[] array tracking cheapest connection for each unvisited node. Update after each node added. O(V²) with array, O(E log V) with heap.",
+followups:["Network Delay Time (LC 743)","Find Critical and Pseudo-Critical Edges (LC 1489)","Connecting Cities With Minimum Cost (LC 1135)","Optimize Water Distribution (LC 1168)"],
+similar:["Network Delay Time","Cheapest Flights","Redundant Connection"],
+notes:"For dense graphs (V² edges like this problem), Prim's with a dist array is O(V²) which is better than Kruskal's O(E log E) = O(V² log V). Manhattan distance: |x1-x2| + |y1-y2|.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — Generate all edges, sort, use Kruskal — O(V² log V)
+// For V=1000 this is 10^6 edges — acceptable but Prim's is cleaner`,why:`Kruskal generates all V² edges explicitly then sorts. Prim's avoids materializing all edges by computing distances on-the-fly as we extend the MST — O(V²) for dense graphs.`,optimal:`// OPTIMAL — Prim's MST — O(V²) time, O(V) space
+public int MinCostConnectPoints(int[][] points) {
+    int n = points.Length;
+    int[] minDist = Enumerable.Repeat(int.MaxValue, n).ToArray();
+    bool[] visited = new bool[n];
+    minDist[0] = 0;
+    int totalCost = 0;
+
+    for (int i = 0; i < n; i++) {
+        // pick unvisited node with minimum distance
+        int u = -1;
+        for (int j = 0; j < n; j++)
+            if (!visited[j] && (u == -1 || minDist[j] < minDist[u])) u = j;
+        visited[u] = true;
+        totalCost += minDist[u];
+        // update distances to unvisited nodes
+        for (int v = 0; v < n; v++)
+            if (!visited[v]) {
+                int d = Math.Abs(points[u][0]-points[v][0]) + Math.Abs(points[u][1]-points[v][1]);
+                minDist[v] = Math.Min(minDist[v], d);
+            }
+    }
+    return totalCost;
+}`,alt:""}},
+
+{id:"l90",name:"Find Median from Data Stream",lcNum:"295",diff:"hard",pattern:"Two Heaps / Sliding Window Median",alts:["Sorted array O(n) insert","Order statistics tree"],
+approach:"Max-heap (lower half) + min-heap (upper half). Always add to lo first, then push lo.top to hi. If hi becomes larger, push hi.top back to lo. Median: if sizes equal → average of tops; else → top of larger heap. O(log n) add, O(1) median.",
+followups:["Sliding Window Median (LC 480)","IPO (LC 502)","Find Right Interval (LC 436)","Kth Largest in Stream (LC 703)"],
+similar:["Kth Largest Element","Top K Frequent Elements","Task Scheduler"],
+notes:"In C#, PriorityQueue is a min-heap. Simulate max-heap by negating priorities: Enqueue(val, -val). The invariant: lo.Count >= hi.Count and lo.Max <= hi.Min at all times.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — maintain sorted list, median is middle element
+// O(n) insert due to shifting, O(1) median
+// Too slow for many inserts`,why:`Sorted list insert is O(n). Two heaps maintain a partition at the median — each insert costs O(log n) to fix the heap, median is always at the tops.`,optimal:`// OPTIMAL — Two Heaps — O(log n) add, O(1) median
+public class MedianFinder {
+    PriorityQueue<int,int> lo = new(); // max-heap: (val, -val)
+    PriorityQueue<int,int> hi = new(); // min-heap: (val,  val)
+
+    public void AddNum(int num) {
+        lo.Enqueue(num, -num);
+        // Balance: push lo's max to hi
+        int top = lo.Dequeue();
+        hi.Enqueue(top, top);
+        // Ensure lo.Count >= hi.Count
+        if (hi.Count > lo.Count) {
+            int v = hi.Dequeue();
+            lo.Enqueue(v, -v);
+        }
+    }
+    public double FindMedian() =>
+        lo.Count > hi.Count ? lo.Peek() : (lo.Peek() + hi.Peek()) / 2.0;
+}`,alt:""}},
+
+{id:"l91",name:"Sliding Window Median",lcNum:"480",diff:"hard",pattern:"Two Heaps / Sliding Window Median",alts:["Two SortedSets + lazy deletion","Segment tree on values"],
+approach:"Two SortedSets (multisets) acting as max-half (lo) and min-half (hi). Slide window: add new element, remove outgoing element using lazy deletion. Rebalance after each operation. Median from tops. O(n log k).",
+followups:["Find Median from Data Stream (LC 295)","Data Stream as Disjoint Intervals (LC 352)","Count of Range Sum (LC 327)"],
+similar:["Find Median from Data Stream","Kth Largest Element","Range Sum Query Mutable"],
+notes:"Lazy deletion: mark removed elements in a HashMap, skip them when they reach the top of the heap. SortedSet doesn't allow duplicates — use (value, index) pairs to differentiate.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n*k): sort each window of size k
+public double[] MedianSlidingWindowBrute(int[] nums, int k) {
+    var res = new double[nums.Length - k + 1];
+    for (int i = 0; i <= nums.Length - k; i++) {
+        var win = nums.Skip(i).Take(k).OrderBy(x=>x).ToArray();
+        res[i] = k%2==1 ? win[k/2] : (win[k/2-1]+(double)win[k/2])/2;
+    }
+    return res;
+}`,why:`Sorting each window is O(k log k) per slide = O(nk log k) total. Two sorted multisets maintain the median partition dynamically — O(log k) per add/remove.`,optimal:`// OPTIMAL — Two SortedSets with (val,idx) pairs — O(n log k)
+public double[] MedianSlidingWindow(int[] nums, int k) {
+    // Use SortedSet<(int val, int idx)> as ordered multiset
+    var lo = new SortedSet<(int v,int i)>(Comparer<(int v,int i)>.Create((a,b)=>a.v!=b.v?b.v-a.v:b.i-a.i)); // max-first
+    var hi = new SortedSet<(int v,int i)>(Comparer<(int v,int i)>.Create((a,b)=>a.v!=b.v?a.v-b.v:a.i-b.i)); // min-first
+
+    Action<(int,int),bool> add = (item, toLo) => {
+        if (toLo) lo.Add(item); else hi.Add(item);
+        if (lo.Count > 0 && hi.Count > 0 && lo.Min.v > hi.Min.v) {
+            var t=lo.Min; lo.Remove(t); hi.Add(t);
+        }
+        while (lo.Count > (k+1)/2) { var t=lo.Min; lo.Remove(t); hi.Add(t); }
+        while (hi.Count > k/2)     { var t=hi.Min; hi.Remove(t); lo.Add(t); }
+    };
+
+    double[] res = new double[nums.Length-k+1];
+    for (int i=0;i<k;i++) add((nums[i],i),true);
+    for (int i=0;i<=nums.Length-k;i++) {
+        res[i] = k%2==1 ? lo.Min.v : (lo.Min.v+(double)hi.Min.v)/2.0;
+        if (i+k<nums.Length) {
+            add((nums[i+k],i+k),true);
+            var rem=(nums[i],i);
+            if (!lo.Remove(rem)) hi.Remove(rem);
+            while (lo.Count<(k+1)/2){var t=hi.Min;hi.Remove(t);lo.Add(t);}
+            while (hi.Count>k/2)   {var t=lo.Min;lo.Remove(t);hi.Add(t);}
+        }
+    }
+    return res;
+}`,alt:""}},
+
+{id:"l92",name:"Two Sum",lcNum:"1",diff:"easy",pattern:"Hash Map / Counting",alts:["Sorting + two pointers O(n log n)","Brute force O(n²)"],
+approach:"One-pass HashMap. For each num, check if complement (target - num) is already in map. If yes → return indices. If no → store num → index in map. O(n) time O(n) space.",
+followups:["Two Sum II (LC 167) — sorted array","Three Sum (LC 15)","Four Sum (LC 18)","Two Sum BSTs (LC 1214)"],
+similar:["Three Sum","Four Sum","Subarray Sum Equals K"],
+notes:"Classic HashMap pattern. Return indices not values (unlike Two Sum II which returns 1-indexed positions). Store num→index (not index→num) so lookup is by value. Single pass: check complement BEFORE inserting current.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n²) time, O(1) space
+public int[] TwoSumBrute(int[] nums, int target) {
+    for (int i = 0; i < nums.Length; i++)
+        for (int j = i+1; j < nums.Length; j++)
+            if (nums[i] + nums[j] == target) return new[]{i, j};
+    return new[]{-1,-1};
+}`,why:`Checking all pairs is O(n²). HashMap enables O(1) complement lookup: we don't need to scan backwards — just check if target-current is already seen.`,optimal:`// OPTIMAL — HashMap one pass — O(n) time, O(n) space
+public int[] TwoSum(int[] nums, int target) {
+    var seen = new Dictionary<int,int>(); // value → index
+    for (int i = 0; i < nums.Length; i++) {
+        int comp = target - nums[i];
+        if (seen.TryGetValue(comp, out int j))
+            return new[]{j, i};
+        seen[nums[i]] = i;
+    }
+    return new[]{-1,-1};
+}`,alt:""}},
+
+{id:"l93",name:"Group Anagrams",lcNum:"49",diff:"medium",pattern:"Hash Map / Counting",alts:["Sort each string as key","Char frequency array as key"],
+approach:"For each string, compute a canonical key (either sort chars, or build a 26-length char-count array). Group strings by key using a Dictionary. Return the values. O(n * k log k) with sorting key, O(n * k) with count-array key (k = max string length).",
+followups:["Valid Anagram (LC 242)","Find All Anagrams in String (LC 438)","Minimum Number of Steps to Make Two Strings Anagram (LC 1347)"],
+similar:["Valid Anagram","Permutation in String","Find All Anagrams in String"],
+notes:"Count-array key is faster but sorting is simpler to code. For count-array: new string(counts) works as a dictionary key in C#. Alternatively use string.Join(',', counts).",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n² * k): compare every pair of strings for anagram equality`,why:`Comparing all pairs is O(n²k). Canonical key lets us group in one pass: two strings are anagrams iff they map to the same key.`,optimal:`// OPTIMAL — HashMap with sorted key — O(nk log k) time, O(nk) space
+public IList<IList<string>> GroupAnagrams(string[] strs) {
+    var map = new Dictionary<string, List<string>>();
+    foreach (var s in strs) {
+        string key = new string(s.OrderBy(c => c).ToArray());
+        if (!map.ContainsKey(key)) map[key] = new List<string>();
+        map[key].Add(s);
+    }
+    return map.Values.Cast<IList<string>>().ToList();
+}`,alt:`// ALTERNATE — O(nk) using char count array as key
+public IList<IList<string>> GroupAnagramsFast(string[] strs) {
+    var map = new Dictionary<string, List<string>>();
+    foreach (var s in strs) {
+        int[] cnt = new int[26];
+        foreach (char c in s) cnt[c-'a']++;
+        string key = string.Join(",", cnt); // "1,0,0,...,1,..."
+        if (!map.ContainsKey(key)) map[key] = new List<string>();
+        map[key].Add(s);
+    }
+    return map.Values.Cast<IList<string>>().ToList();
+}`}},
+
+{id:"l94",name:"Longest Consecutive Sequence",lcNum:"128",diff:"medium",pattern:"Hash Map / Counting",alts:["Sort O(n log n)","Union-Find"],
+approach:"Put all numbers in a HashSet. For each number, only start counting if num-1 is NOT in the set (it's the start of a sequence). Count upward as long as num+1 exists. O(n) time O(n) space. Each element visited at most twice.",
+followups:["Longest Consecutive Sequence II (LC 1767 variant)","Find Missing Number (LC 268)","Missing Ranges (LC 163)","Arithmetic Slices (LC 413)"],
+similar:["Two Sum","Contains Duplicate","Missing Number"],
+notes:"The 'only start from sequence head' trick is critical — otherwise O(n²). A number is a sequence head if num-1 is not in the set. Each number is counted as part of exactly one sequence.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n log n): sort then count consecutive runs
+public int LongestConsecutiveBrute(int[] nums) {
+    if (nums.Length == 0) return 0;
+    Array.Sort(nums);
+    int max = 1, cur = 1;
+    for (int i = 1; i < nums.Length; i++) {
+        if (nums[i] == nums[i-1]) continue; // skip dups
+        cur = nums[i] == nums[i-1]+1 ? cur+1 : 1;
+        max = Math.Max(max, cur);
+    }
+    return max;
+}`,why:`Sorting is O(n log n). HashSet approach is O(n): by only starting a count when we're at the beginning of a sequence (num-1 not present), we ensure each element is visited at most twice total.`,optimal:`// OPTIMAL — HashSet + start detection — O(n) time, O(n) space
+public int LongestConsecutive(int[] nums) {
+    var set = new HashSet<int>(nums);
+    int maxLen = 0;
+    foreach (int n in set) {
+        if (set.Contains(n - 1)) continue; // not a sequence start
+        int len = 1;
+        while (set.Contains(n + len)) len++;
+        maxLen = Math.Max(maxLen, len);
+    }
+    return maxLen;
+}`,alt:""}},
+
+{id:"l95",name:"Valid Parentheses",lcNum:"20",diff:"easy",pattern:"Stack / Queue Tricks",alts:["Counter (only for one bracket type)"],
+approach:"Use a stack. For opening brackets push. For closing brackets: if stack empty or top doesn't match → return false. Pop the top. After scanning: valid iff stack is empty. O(n) time O(n) space.",
+followups:["Minimum Remove to Make Valid Parentheses (LC 1249)","Score of Parentheses (LC 856)","Longest Valid Parentheses (LC 32)","Generate Parentheses (LC 22)"],
+similar:["Minimum Remove to Make Valid Parentheses","Decode String","Basic Calculator"],
+notes:"Use a Dictionary mapping closing → opening bracket for clean code. Stack empty check before popping is critical. Final check: stack must be empty (no unmatched opens).",date:"2026-03-15",
+solution:{brute:`// No meaningful brute force — stack IS the optimal solution for this problem`,why:`Stack directly models the LIFO nature of bracket matching: the most recently opened bracket must be closed first. No other approach beats O(n) for this problem.`,optimal:`// OPTIMAL — Stack — O(n) time, O(n) space
+public bool IsValid(string s) {
+    var stack = new Stack<char>();
+    var match = new Dictionary<char,char> {{')','('},{']','['},{'}','{'}};
+
+    foreach (char c in s) {
+        if (c=='('||c=='['||c=='{') stack.Push(c);
+        else {
+            if (stack.Count == 0 || stack.Pop() != match[c])
+                return false;
+        }
+    }
+    return stack.Count == 0;
+}`,alt:""}},
+
+{id:"l96",name:"Min Stack",lcNum:"155",diff:"medium",pattern:"Stack / Queue Tricks",alts:["Store (val, currentMin) pairs"],
+approach:"Maintain two stacks: main stack and a min-stack. On push: push to main, push min(val, minStack.top) to minStack. On pop: pop both. GetMin = minStack.top. All O(1). Space O(n) but optimal since we need to support push/pop.",
+followups:["Max Stack (LC 716)","Implement Queue using Stacks (LC 232)","Implement Stack using Queues (LC 225)","Basic Calculator (LC 224)"],
+similar:["Valid Parentheses","Decode String","Evaluate Reverse Polish Notation"],
+notes:"minStack always has same size as main stack. On each push, the min-stack entry is the minimum of all elements from bottom to current position. This avoids recomputing min after pops.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — scan entire stack for minimum on each GetMin call — O(n)`,why:`Scanning for minimum is O(n) per GetMin. By maintaining a parallel min-stack, we precompute the running minimum at each stack depth — O(1) for all operations.`,optimal:`// OPTIMAL — Parallel min-stack — O(1) all operations, O(n) space
+public class MinStack {
+    Stack<int> stack = new(), minStack = new();
+
+    public void Push(int val) {
+        stack.Push(val);
+        minStack.Push(minStack.Count == 0 ? val : Math.Min(val, minStack.Peek()));
+    }
+    public void Pop() { stack.Pop(); minStack.Pop(); }
+    public int Top()    => stack.Peek();
+    public int GetMin() => minStack.Peek();
+}`,alt:`// ALTERNATE — Store pairs (val, currentMin) in single stack
+public class MinStackPairs {
+    Stack<(int val, int min)> stack = new();
+    public void Push(int val) {
+        int curMin = stack.Count == 0 ? val : Math.Min(val, stack.Peek().min);
+        stack.Push((val, curMin));
+    }
+    public void Pop() => stack.Pop();
+    public int Top()    => stack.Peek().val;
+    public int GetMin() => stack.Peek().min;
+}`}},
+
+{id:"l97",name:"Reverse Linked List",lcNum:"206",diff:"easy",pattern:"Linked List",alts:["Recursive","Stack (O(n) space)"],
+approach:"Iterative three-pointer: prev=null, cur=head. At each step: save next=cur.next, set cur.next=prev, advance prev=cur, cur=next. Return prev when cur is null. O(n) time O(1) space.",
+followups:["Reverse Linked List II (LC 92) — reverse sublist","Reverse Nodes in k-Group (LC 25)","Palindrome Linked List (LC 234)","Reorder List (LC 143)"],
+similar:["Reverse Linked List II","Palindrome Linked List","Merge Two Sorted Lists"],
+notes:"Three variables: prev (new head grows here), cur (current node), next (saved before overwriting cur.next). Recursive version: reverse(head.next), then head.next.next = head, head.next = null.",date:"2026-03-15",
+solution:{brute:`// No brute force needed — iterative IS the optimal approach`,why:`Reversing a linked list requires touching every node exactly once — O(n) is optimal. The challenge is doing it in-place with O(1) space using the three-pointer technique.`,optimal:`// OPTIMAL — Iterative three-pointer — O(n) time, O(1) space
+public ListNode ReverseList(ListNode head) {
+    ListNode prev = null, cur = head;
+    while (cur != null) {
+        ListNode next = cur.next; // save
+        cur.next = prev;          // reverse
+        prev = cur;               // advance
+        cur = next;
+    }
+    return prev; // new head
+}`,alt:`// ALTERNATE — Recursive — O(n) time, O(n) space (call stack)
+public ListNode ReverseListRec(ListNode head) {
+    if (head == null || head.next == null) return head;
+    ListNode newHead = ReverseListRec(head.next);
+    head.next.next = head;
+    head.next = null;
+    return newHead;
+}`}},
+
+{id:"l98",name:"Merge Two Sorted Lists",lcNum:"21",diff:"easy",pattern:"Linked List",alts:["Recursive","Collect to arrays"],
+approach:"Dummy head node + iterative merge. Compare l1.val and l2.val, append the smaller to result, advance that pointer. When one list exhausted, append the other. Return dummy.next. O(n+m) time O(1) space.",
+followups:["Merge K Sorted Lists (LC 23)","Sort List (LC 148)","Merge Sorted Array (LC 88)","Intersection of Two Linked Lists (LC 160)"],
+similar:["Merge K Sorted Lists","Sort List","Merge Intervals"],
+notes:"Dummy head eliminates special case for inserting into empty result list. After the while loop, one list may still have remaining nodes — cur.next = l1 ?? l2 handles both cases.",date:"2026-03-15",
+solution:{brute:`// No simpler brute force — merge is inherently O(n+m) since we must read every node`,why:`We must examine every node to produce sorted output — O(n+m) is optimal. Dummy head simplifies the code by removing the 'empty result' edge case.`,optimal:`// OPTIMAL — Iterative with dummy head — O(n+m) time, O(1) space
+public ListNode MergeTwoLists(ListNode l1, ListNode l2) {
+    var dummy = new ListNode(0);
+    var cur = dummy;
+
+    while (l1 != null && l2 != null) {
+        if (l1.val <= l2.val) { cur.next = l1; l1 = l1.next; }
+        else                  { cur.next = l2; l2 = l2.next; }
+        cur = cur.next;
+    }
+    cur.next = l1 ?? l2; // attach remaining
+    return dummy.next;
+}`,alt:`// ALTERNATE — Recursive — O(n+m) time, O(n+m) space (call stack)
+public ListNode MergeTwoListsRec(ListNode l1, ListNode l2) {
+    if (l1 == null) return l2;
+    if (l2 == null) return l1;
+    if (l1.val <= l2.val) { l1.next = MergeTwoListsRec(l1.next, l2); return l1; }
+    else                  { l2.next = MergeTwoListsRec(l1, l2.next); return l2; }
+}`}},
+
+{id:"l99",name:"LRU Cache",lcNum:"146",diff:"medium",pattern:"Linked List",alts:["OrderedDictionary (C#)","SortedDictionary with timestamp"],
+approach:"Dictionary<int, LinkedListNode> + DoublyLinkedList. Get: move node to front. Put: if exists update+move to front; if new add to front, evict tail if over capacity. All O(1). Dummy head and tail simplify list manipulation.",
+followups:["LFU Cache (LC 460)","Design HashMap (LC 706)","Design Hashset (LC 705)","All O(1) Data Structure (LC 432)"],
+similar:["Design HashMap","Design Hashset","Implement Stack using Queues"],
+notes:"LinkedList in C# is doubly-linked. Store LinkedListNode in dictionary for O(1) node access. Dummy sentinels (head and tail) avoid null checks on remove/insert. C# OrderedDictionary is simpler but less instructive.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — List<KeyValuePair> — O(n) get/put due to linear search`,why:`Linear search is O(n). HashMap gives O(1) lookup; doubly linked list gives O(1) move-to-front and eviction by maintaining insertion order with O(1) node re-linking.`,optimal:`// OPTIMAL — HashMap + Doubly Linked List — O(1) get/put
+public class LRUCache {
+    int capacity;
+    Dictionary<int, LinkedListNode<(int k, int v)>> map = new();
+    LinkedList<(int k, int v)> list = new();
+
+    public LRUCache(int capacity) { this.capacity = capacity; }
+
+    public int Get(int key) {
+        if (!map.ContainsKey(key)) return -1;
+        var node = map[key];
+        list.Remove(node); list.AddFirst(node.Value); // move to front
+        map[key] = list.First;
+        return node.Value.v;
+    }
+    public void Put(int key, int value) {
+        if (map.ContainsKey(key)) list.Remove(map[key]);
+        list.AddFirst((key, value));
+        map[key] = list.First;
+        if (map.Count > capacity) {
+            map.Remove(list.Last.Value.k);
+            list.RemoveLast();
+        }
+    }
+}`,alt:""}},
+
+{id:"l100",name:"Count Primes",lcNum:"204",diff:"medium",pattern:"Math & Number Theory",alts:["Trial division O(n√n)","Segmented sieve"],
+approach:"Sieve of Eratosthenes. Boolean array isPrime[n+1], initially all true. For each i from 2 to √n: if isPrime[i], mark all multiples of i starting from i² as false. Count remaining trues from 2 to n-1. O(n log log n) time O(n) space.",
+followups:["Prime Arrangements (LC 1175)","Ugly Number II (LC 264)","Super Ugly Number (LC 313)","Nth Magical Number (LC 878)"],
+similar:["Happy Number","Perfect Squares","Ugly Number"],
+notes:"Start marking from i² (not 2i) because smaller multiples already marked. Only iterate i up to √n. Sieve is O(n log log n) — nearly linear. For very large n use segmented sieve.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n√n): check each number for primality individually
+public int CountPrimesBrute(int n) {
+    int count = 0;
+    for (int i = 2; i < n; i++) {
+        bool prime = true;
+        for (int j = 2; j * j <= i; j++)
+            if (i % j == 0) { prime = false; break; }
+        if (prime) count++;
+    }
+    return count;
+}`,why:`Individual primality tests are O(√n) each — O(n√n) total. Sieve marks composites in bulk: when we find a prime p, all its multiples are composite. Much faster at O(n log log n).`,optimal:`// OPTIMAL — Sieve of Eratosthenes — O(n log log n) time, O(n) space
+public int CountPrimes(int n) {
+    if (n < 2) return 0;
+    bool[] notPrime = new bool[n];
+    for (int i = 2; (long)i * i < n; i++)
+        if (!notPrime[i])
+            for (int j = i * i; j < n; j += i)
+                notPrime[j] = true;
+    int count = 0;
+    for (int i = 2; i < n; i++) if (!notPrime[i]) count++;
+    return count;
+}`,alt:""}},
+
+{id:"l101",name:"Pow(x, n)",lcNum:"50",diff:"medium",pattern:"Math & Number Theory",alts:["Iterative binary exponentiation","Recursive fast pow"],
+approach:"Binary exponentiation (fast pow). If n is even: x^n = (x²)^(n/2). If n is odd: x^n = x * x^(n-1). Recursively halve n. Handle negative n: x^(-n) = (1/x)^n. O(log n) time O(log n) stack space. Iterative version O(1) space.",
+followups:["Sqrt(x) (LC 69) — binary search on answer","Super Pow (LC 372) — modular exponentiation","Matrix Exponentiation","Fibonacci in O(log n) via matrix pow"],
+similar:["Sqrt(x)","Count Primes","Integer Break"],
+notes:"Watch for n = INT_MIN: -INT_MIN overflows. Cast to long first. Iterative: while n>0, if n is odd multiply result by x, then x=x*x, n>>=1.",date:"2026-03-15",
+solution:{brute:`// BRUTE FORCE — O(n): multiply x n times
+public double MyPowBrute(double x, int n) {
+    double res = 1;
+    long N = Math.Abs((long)n);
+    for (long i = 0; i < N; i++) res *= x;
+    return n < 0 ? 1.0/res : res;
+}`,why:`O(n) multiplications is too slow for large n (up to 2^31). Binary exponentiation halves the problem each step: x^n = (x^(n/2))^2, reducing to O(log n) multiplications.`,optimal:`// OPTIMAL — Fast Power (iterative) — O(log n) time, O(1) space
+public double MyPow(double x, int n) {
+    long N = n; // handle INT_MIN
+    if (N < 0) { x = 1.0 / x; N = -N; }
+    double result = 1.0;
+    while (N > 0) {
+        if ((N & 1) == 1) result *= x; // odd: take one factor
+        x *= x;                         // square the base
+        N >>= 1;                        // halve the exponent
+    }
+    return result;
+}`,alt:""}}
+
 ];
 
 const [log,setLog]=useState(()=>{try{const s=localStorage.getItem("dsa_problem_log_v2");if(s)return JSON.parse(s);}catch{}return ALL_LOG_PROBLEMS;});
@@ -3614,6 +5030,45 @@ const toggleFollowup=(probId,fuIdx)=>{const key=probId+"::"+fuIdx;saveFollowupSt
 const isFuDone=(probId,fuIdx)=>!!followupStatus[probId+"::"+fuIdx];
 const fuStats=(e)=>{if(!e.followups||!e.followups.length)return{t:0,d:0};const d=e.followups.filter((_,i)=>isFuDone(e.id,i)).length;return{t:e.followups.length,d};};
 const [logFilterFollowup,setLogFilterFollowup]=useState("");
+const [randPatFilter,setRandPatFilter]=useState([]);
+const [randProblem,setRandProblem]=useState(null);
+const [randHistory,setRandHistory]=useState([]);
+const [randHistIdx,setRandHistIdx]=useState(-1);
+const [randIncludeFollowups,setRandIncludeFollowups]=useState(true);
+const [randIncludeMain,setRandIncludeMain]=useState(true);
+const [randFlipped,setRandFlipped]=useState(false);
+const pickRandom=(patFilter,inclMain,inclFollowups)=>{
+  let pool=[];
+  P.forEach(p=>{
+    const active=patFilter.length===0||patFilter.includes(p.name);
+    if(!active)return;
+    if(inclMain&&p.problems){p.problems.forEach(name=>pool.push({name,pattern:p.name,source:"pattern",color:p.color,border:p.border,emoji:p.emoji}));}
+  });
+  if(inclFollowups){
+    log.forEach(e=>{
+      const active=patFilter.length===0||patFilter.includes(e.pattern);
+      if(!active)return;
+      (e.followups||[]).forEach(f=>pool.push({name:f,pattern:e.pattern,source:"followup",parentProblem:e.name,color:(P.find(x=>x.name===e.pattern)||{color:"#58A6FF"}).color,border:(P.find(x=>x.name===e.pattern)||{border:"#58A6FF40"}).border,emoji:(P.find(x=>x.name===e.pattern)||{emoji:"📌"}).emoji}));
+    });
+  }
+  if(pool.length===0)return null;
+  return pool[Math.floor(Math.random()*pool.length)];
+};
+const rollRandom=()=>{
+  const p=pickRandom(randPatFilter,randIncludeMain,randIncludeFollowups);
+  if(!p)return;
+  setRandProblem(p);
+  setRandFlipped(false);
+  setRandHistory(h=>{const nh=[...h.slice(0,randHistIdx+1),p];setRandHistIdx(nh.length-1);return nh;});
+};
+const goRandHistory=(dir)=>{
+  const ni=randHistIdx+dir;
+  if(ni<0||ni>=randHistory.length)return;
+  setRandHistIdx(ni);
+  setRandProblem(randHistory[ni]);
+  setRandFlipped(false);
+};
+const toggleRandPat=(name)=>setRandPatFilter(f=>f.includes(name)?f.filter(x=>x!==name):[...f,name]);
 
 const saveLog=(next)=>{setLog(next);try{localStorage.setItem("dsa_problem_log_v2",JSON.stringify(next));}catch{}};
 const toggleCard=(id)=>setOpenCards(p=>({...p,[id]:!p[id]}));
@@ -3652,7 +5107,7 @@ const hl=(line)=>line.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&
 .replace(/\b(\d+)\b/g,'<span style="color:#79C0FF">$1</span>')
 .replace(/\b(Math|Array|List|Dictionary|HashSet|Stack|Queue|PriorityQueue|Enumerable)\b/g,'<span style="color:#FFA657">$1</span>');
 
-const navs=[["patterns","📖 Patterns"],["cheatsheet","📊 Quick Ref"],["finder","🎯 Finder"],["approach","🧭 Approach"],["log","📝 Problem Log"]];
+const navs=[["patterns","📖 Patterns"],["cheatsheet","📊 Quick Ref"],["finder","🎯 Finder"],["approach","🧭 Approach"],["log","📝 Problem Log"],["random","🎲 Random"]];
 
 function SolutionBlock({sol,id,hlFn}){
   const [copiedSol,setCopiedSol]=React.useState(null);
@@ -3698,12 +5153,12 @@ return(
   <div>
     <div style={{fontSize:15,fontWeight:700,letterSpacing:2}}>⚡ DSA PATTERNS — C#</div>
     <div style={{display:"flex",alignItems:"center",gap:8,marginTop:5}}>
-      <span style={{fontSize:10,color:"#8B949E"}}>14 patterns · Google L4</span>
+      <span style={{fontSize:10,color:"#8B949E"}}>26 patterns · Google L4</span>
       <span style={{fontSize:10,color:"#56D364",background:"#56D36420",border:"1px solid #56D36450",borderRadius:3,padding:"1px 6px"}}>✅ {doneN}/14</span>
       {inPN>0&&<span style={{fontSize:10,color:"#FFD700",background:"#FFD70020",border:"1px solid #FFD70050",borderRadius:3,padding:"1px 6px"}}>⏳ {inPN}</span>}
     </div>
     <div style={{width:200,height:3,background:"#21262D",borderRadius:2,marginTop:5}}>
-      <div style={{height:"100%",width:`${(doneN/14)*100}%`,background:"linear-gradient(90deg,#56D364,#2EA043)",borderRadius:2,transition:"width 0.4s"}}/>
+      <div style={{height:"100%",width:`${(doneN/26)*100}%`,background:"linear-gradient(90deg,#56D364,#2EA043)",borderRadius:2,transition:"width 0.4s"}}/>
     </div>
   </div>
   <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
@@ -4213,6 +5668,149 @@ return(
 {log.filter(e=>{if(logFilterDiff&&e.diff!==logFilterDiff)return false;if(logFilterPat&&e.pattern!==logFilterPat)return false;if(logFilterStatus){const st=getStatus(e.id);if(logFilterStatus==="theory"&&!st.theory)return false;if(logFilterStatus==="practiced"&&!st.practiced)return false;if(logFilterStatus==="coded"&&!st.coded)return false;if(logFilterStatus==="revisit"&&!st.revisit)return false;if(logFilterStatus==="mastered"&&!(st.theory&&st.practiced&&st.coded))return false;if(logFilterStatus==="untouched"&&(st.theory||st.practiced||st.coded))return false;}if(logFilterFollowup){const fs=fuStats(e);if(logFilterFollowup==="has"&&!fs.t)return false;if(logFilterFollowup==="none"&&fs.t)return false;if(logFilterFollowup==="all_done"&&(fs.t===0||fs.d<fs.t))return false;if(logFilterFollowup==="pending"&&(fs.t===0||fs.d===fs.t))return false;if(logFilterFollowup==="partial"&&(fs.t===0||fs.d===0||fs.d===fs.t))return false;}if(logSearch){const q=logSearch.toLowerCase();return e.name.toLowerCase().includes(q)||e.pattern.toLowerCase().includes(q)||(e.approach||"").toLowerCase().includes(q)||(e.notes||"").toLowerCase().includes(q);}return true;}).length===0&&(
   <div style={{textAlign:"center",padding:"3rem 1rem",color:"#484F58",fontSize:12}}>No problems match your filters.</div>
 )}
+</div>
+</div>
+)}
+
+{/* RANDOM PROBLEM */}
+{view==="random"&&(
+<div style={{flex:1,overflowY:"auto",padding:18}}>
+<div style={{maxWidth:700,margin:"0 auto"}}>
+
+  {/* Header */}
+  <div style={{marginBottom:20}}>
+    <div style={{fontSize:14,fontWeight:700,marginBottom:3}}>🎲 Random Problem</div>
+    <div style={{fontSize:11,color:"#8B949E"}}>Drill random problems from pattern lists and follow-up questions. Use filters to focus on specific patterns.</div>
+  </div>
+
+  {/* Controls row */}
+  <div style={{display:"flex",gap:8,marginBottom:14,flexWrap:"wrap",alignItems:"center"}}>
+    <label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",fontSize:11,color:randIncludeMain?"#E6EDF3":"#8B949E",background:randIncludeMain?"#238636":"#161B22",border:"1px solid "+(randIncludeMain?"#2EA043":"#30363D"),borderRadius:5,padding:"5px 10px"}}>
+      <input type="checkbox" checked={randIncludeMain} onChange={e=>setRandIncludeMain(e.target.checked)} style={{accentColor:"#56D364",width:12,height:12}}/>
+      Pattern Problems
+    </label>
+    <label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",fontSize:11,color:randIncludeFollowups?"#E6EDF3":"#8B949E",background:randIncludeFollowups?"#FDCB6E20":"#161B22",border:"1px solid "+(randIncludeFollowups?"#FDCB6E50":"#30363D"),borderRadius:5,padding:"5px 10px"}}>
+      <input type="checkbox" checked={randIncludeFollowups} onChange={e=>setRandIncludeFollowups(e.target.checked)} style={{accentColor:"#FDCB6E",width:12,height:12}}/>
+      Follow-up Problems
+    </label>
+    <div style={{flex:1}}/>
+    <span style={{fontSize:10,color:"#484F58"}}>Pool: {P.filter(p=>randPatFilter.length===0||randPatFilter.includes(p.name)).reduce((n,p)=>n+(randIncludeMain?(p.problems||[]).length:0)+(randIncludeFollowups?log.filter(e=>e.pattern===p.name).reduce((s,e)=>s+(e.followups||[]).length,0):0),0)} problems</span>
+  </div>
+
+  {/* Pattern filter chips */}
+  <div style={{marginBottom:16}}>
+    <div style={{fontSize:9,color:"#8B949E",letterSpacing:1,marginBottom:8,fontWeight:700}}>FILTER BY PATTERN <span style={{color:"#484F58",fontWeight:400}}>(all selected = any pattern)</span></div>
+    <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
+      {P.map(p=>{
+        const sel=randPatFilter.includes(p.name);
+        return(
+          <button key={p.id} onClick={()=>toggleRandPat(p.name)}
+            style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:"1px solid "+(sel?p.border:"#30363D"),background:sel?p.bg:"#161B22",color:sel?p.color:"#8B949E",cursor:"pointer",fontFamily:"inherit",transition:"all 0.15s"}}>
+            {p.emoji} {p.name}
+          </button>
+        );
+      })}
+      {randPatFilter.length>0&&<button onClick={()=>setRandPatFilter([])} style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:"1px solid #30363D",background:"transparent",color:"#484F58",cursor:"pointer",fontFamily:"inherit"}}>✕ Clear</button>}
+    </div>
+  </div>
+
+  {/* Roll button */}
+  <div style={{display:"flex",gap:8,alignItems:"center",marginBottom:20}}>
+    <button onClick={rollRandom}
+      style={{flex:1,padding:"13px 0",fontSize:14,fontWeight:700,background:"linear-gradient(135deg,#238636,#196127)",border:"1px solid #2EA043",borderRadius:8,color:"#fff",cursor:"pointer",fontFamily:"inherit",letterSpacing:1}}>
+      🎲 Roll Random Problem
+    </button>
+    <button onClick={()=>goRandHistory(-1)} disabled={randHistIdx<=0}
+      style={{padding:"13px 14px",fontSize:13,background:"#161B22",border:"1px solid #30363D",borderRadius:8,color:randHistIdx>0?"#8B949E":"#30363D",cursor:randHistIdx>0?"pointer":"default",fontFamily:"inherit"}}>←</button>
+    <button onClick={()=>goRandHistory(1)} disabled={randHistIdx>=randHistory.length-1}
+      style={{padding:"13px 14px",fontSize:13,background:"#161B22",border:"1px solid #30363D",borderRadius:8,color:randHistIdx<randHistory.length-1?"#8B949E":"#30363D",cursor:randHistIdx<randHistory.length-1?"pointer":"default",fontFamily:"inherit"}}>→</button>
+  </div>
+  {randHistory.length>0&&<div style={{fontSize:9,color:"#484F58",textAlign:"center",marginTop:-14,marginBottom:16}}>{randHistIdx+1} / {randHistory.length} in session history</div>}
+
+  {/* Problem Card */}
+  {randProblem?(
+    <div style={{background:"#161B22",border:"1px solid "+randProblem.border,borderRadius:12,overflow:"hidden",animation:"fadeIn 0.25s ease"}}>
+      {/* Card header */}
+      <div style={{padding:"18px 20px 14px",borderBottom:"1px solid #21262D"}}>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",gap:10}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:9,color:randProblem.color,fontWeight:700,letterSpacing:1.5,marginBottom:6,textTransform:"uppercase"}}>{randProblem.emoji} {randProblem.pattern}{randProblem.source==="followup"?" · Follow-up":""}</div>
+            <div style={{fontSize:17,fontWeight:700,color:"#E6EDF3",lineHeight:1.4,marginBottom:randProblem.source==="followup"?6:0}}>{randProblem.name}</div>
+            {randProblem.source==="followup"&&<div style={{fontSize:10,color:"#8B949E",marginTop:4}}>Follow-up of: <span style={{color:randProblem.color}}>{randProblem.parentProblem}</span></div>}
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:5,alignItems:"flex-end",flexShrink:0}}>
+            <span style={{fontSize:9,padding:"3px 9px",borderRadius:3,background:randProblem.source==="followup"?"#FDCB6E15":"#56D36415",border:"1px solid "+(randProblem.source==="followup"?"#FDCB6E40":"#56D36440"),color:randProblem.source==="followup"?"#FDCB6E":"#56D364"}}>
+              {randProblem.source==="followup"?"🎯 Follow-up":"📋 Pattern List"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Flip card - hint reveal */}
+      <div style={{padding:"16px 20px"}}>
+        {!randFlipped?(
+          <button onClick={()=>setRandFlipped(true)}
+            style={{width:"100%",padding:"12px",background:"rgba(255,255,255,0.03)",border:"1px dashed #30363D",borderRadius:7,color:"#484F58",fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
+            💡 Reveal pattern hint →
+          </button>
+        ):(
+          <div style={{background:randProblem.bg,border:"1px solid "+randProblem.border,borderRadius:7,padding:"14px 16px"}}>
+            <div style={{fontSize:9,color:randProblem.color,fontWeight:700,letterSpacing:1,marginBottom:8}}>💡 PATTERN HINT</div>
+            {(P.find(x=>x.name===randProblem.pattern)||{identify:[],trick:""}).identify.slice(0,3).map((s,i)=>(
+              <div key={i} style={{display:"flex",gap:7,marginBottom:5}}>
+                <span style={{color:randProblem.color,fontSize:11,flexShrink:0}}>▸</span>
+                <span style={{fontSize:11,color:"#C9D1D9",lineHeight:1.5}}>{s}</span>
+              </div>
+            ))}
+            {(P.find(x=>x.name===randProblem.pattern)||{trick:""}).trick&&(
+              <div style={{marginTop:10,background:"#0D1117",borderRadius:4,padding:"7px 10px",borderLeft:"3px solid "+randProblem.color}}>
+                <span style={{fontSize:9,color:randProblem.color,fontWeight:700,letterSpacing:1}}>TRICK: </span>
+                <span style={{fontSize:10,color:"#8B949E"}}>{(P.find(x=>x.name===randProblem.pattern)||{trick:""}).trick}</span>
+              </div>
+            )}
+            <button onClick={()=>{setActive(P.find(x=>x.name===randProblem.pattern)||P[0]);setTab("identify");setView("patterns");}}
+              style={{marginTop:12,padding:"5px 14px",fontSize:10,background:"transparent",border:"1px solid "+randProblem.border,borderRadius:5,color:randProblem.color,cursor:"pointer",fontFamily:"inherit"}}>
+              Open {randProblem.pattern} pattern →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Log entry detail if exists */}
+      {log.filter(e=>e.name===randProblem.name||(randProblem.parentProblem&&e.name===randProblem.parentProblem)).slice(0,1).map(logEntry=>(
+          <div key={logEntry.id} style={{borderTop:"1px solid #21262D",padding:"12px 20px"}}>
+            <div style={{fontSize:9,color:"#8B949E",fontWeight:700,letterSpacing:1,marginBottom:8}}>📝 FROM YOUR PROBLEM LOG</div>
+            {logEntry.approach&&<div style={{background:"#0D1117",border:"1px solid #21262D",borderLeft:"3px solid "+randProblem.color,borderRadius:5,padding:"8px 12px",fontSize:11,color:"#C9D1D9",lineHeight:1.7,marginBottom:8}}>{logEntry.approach}</div>}
+            {logEntry.notes&&<div style={{background:"#1C2128",border:"1px solid #30363D",borderRadius:5,padding:"8px 12px",fontSize:11,color:"#C9D1D9",lineHeight:1.7}}>📌 {logEntry.notes}</div>}
+          </div>
+      ))}
+    </div>
+  ):(
+    <div style={{textAlign:"center",padding:"4rem 1rem",color:"#484F58"}}>
+      <div style={{fontSize:32,marginBottom:12}}>🎲</div>
+      <div style={{fontSize:13,marginBottom:6}}>Hit Roll to get a random problem</div>
+      <div style={{fontSize:11}}>Filter by pattern to focus your drill session</div>
+    </div>
+  )}
+
+  {/* History strip */}
+  {randHistory.length>1&&(
+    <div style={{marginTop:20}}>
+      <div style={{fontSize:9,color:"#484F58",letterSpacing:1,marginBottom:8,fontWeight:700}}>SESSION HISTORY</div>
+      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+        {randHistory.map((h,i)=>(
+          <div key={i} onClick={()=>{setRandHistIdx(i);setRandProblem(randHistory[i]);setRandFlipped(false);}}
+            style={{display:"flex",alignItems:"center",gap:9,padding:"7px 11px",borderRadius:6,background:i===randHistIdx?"#161B22":"transparent",border:"1px solid "+(i===randHistIdx?h.border:"transparent"),cursor:"pointer"}}>
+            <span style={{fontSize:9,color:i===randHistIdx?h.color:"#484F58",fontWeight:700,minWidth:18}}>#{i+1}</span>
+            <span style={{fontSize:9,padding:"1px 6px",borderRadius:3,background:h.source==="followup"?"#FDCB6E15":"#56D36415",color:h.source==="followup"?"#FDCB6E":"#56D364",flexShrink:0}}>{h.source==="followup"?"🎯":"📋"}</span>
+            <span style={{fontSize:11,color:i===randHistIdx?"#E6EDF3":"#8B949E",flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{h.name}</span>
+            <span style={{fontSize:9,color:"#484F58"}}>{h.pattern}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+
 </div>
 </div>
 )}
